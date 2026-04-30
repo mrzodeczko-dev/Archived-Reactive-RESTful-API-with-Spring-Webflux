@@ -31,26 +31,25 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
-        <!-- Log4j2 as the one and only SLF4J binding.
-             logback-classic and log4j-to-slf4j are globally neutralised
-             via <dependencyManagement> below (scope=provided). -->
+        <!--
+            The sole SLF4J binding. spring-boot-starter-logging (which normally
+            provides logback-classic + log4j-to-slf4j) is globally neutralised
+            via <dependencyManagement> below, so no dual-binding conflict occurs.
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
-        <!-- jackson-dataformat-yaml: version managed by Spring Boot BOM -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
-        <!-- jackson-databind: version managed by Spring Boot BOM -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <!-- commons-validator: upgraded 1.6 -> 1.7 (security fix) -->
         <dependency>
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
@@ -116,7 +115,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- BlockHound: upgraded 1.0.1 -> 1.0.6 (Java 17 strong-encapsulation compat) -->
         <dependency>
             <groupId>io.projectreactor.tools</groupId>
             <artifactId>blockhound</artifactId>
@@ -133,7 +131,6 @@
             <groupId>com.github.cloudyrock.mongock</groupId>
             <artifactId>mongock-spring-v5</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.github.cloudyrock.mongock</groupId>
             <artifactId>mongodb-springdata-v3-driver</artifactId>
@@ -147,7 +144,6 @@
             <artifactId>spring-data-mongodb</artifactId>
         </dependency>
 
-        <!-- jasypt: upgraded 2.0.0 -> 3.0.5 (Java 17 compat, Spring Boot 2.4+ compat) -->
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot-starter</artifactId>
@@ -164,7 +160,6 @@
             <artifactId>springdoc-openapi-webflux-ui</artifactId>
             <version>1.5.2</version>
         </dependency>
-
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-webflux-core</artifactId>
@@ -185,35 +180,28 @@
             </dependency>
 
             <!--
-                Global fix for the SLF4J dual-binding conflict:
-                  log4j-slf4j-impl (from spring-boot-starter-log4j2) +
-                  log4j-to-slf4j   (from spring-boot-starter-logging) = crash.
+                ROOT-CAUSE FIX for the dual SLF4J-binding crash:
 
-                Setting logback-classic and log4j-to-slf4j to scope=provided
-                prevents them from appearing on the runtime classpath regardless
-                of which transitive dependency pulls them (jasypt, mongock,
-                springdoc, mail, security, etc.).
+                  log4j-slf4j-impl  (from spring-boot-starter-log4j2)  — NEEDED
+                  log4j-to-slf4j    (from spring-boot-starter-logging) — ILLEGAL together
+                  logback-classic   (from spring-boot-starter-logging) — ILLEGAL together
 
-                logback-core follows logback-classic — also neutralised.
+                Setting spring-boot-starter-logging itself to scope=provided prevents
+                Maven from including it (and ALL its transitive dependencies: logback-classic,
+                logback-core, log4j-to-slf4j) on the runtime classpath — regardless of which
+                starter transitively pulls it (webflux, security, mail, jasypt, mongock,
+                springdoc…).
+
+                This project's <dependencyManagement> takes precedence over the
+                spring-boot-starter-parent BOM, so this entry wins globally.
             -->
             <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.2.3</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-logging</artifactId>
+                <version>2.4.4</version>
                 <scope>provided</scope>
             </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.2.3</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-to-slf4j</artifactId>
-                <version>2.13.3</version>
-                <scope>provided</scope>
-            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -222,9 +210,7 @@
         <repository>
             <id>spring-snapshots</id>
             <url>https://repo.spring.io/snapshot</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
+            <snapshots><enabled>true</enabled></snapshots>
         </repository>
         <repository>
             <id>spring-milestones</id>
@@ -240,7 +226,6 @@
             <id>spring-milestones</id>
             <url>https://repo.spring.io/milestone</url>
         </pluginPlugin>
-
     </pluginRepositories>
 
     <build>
@@ -251,9 +236,7 @@
                     <execution>
                         <id>assembly</id>
                         <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
+                        <goals><goal>single</goal></goals>
                     </execution>
                 </executions>
                 <configuration>
@@ -277,6 +260,7 @@
                     <mainClass>${start-class}</mainClass>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -284,9 +268,7 @@
                     <execution>
                         <id>unpack</id>
                         <phase>package</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
+                        <goals><goal>unpack</goal></goals>
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
@@ -299,6 +281,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -314,7 +297,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 
