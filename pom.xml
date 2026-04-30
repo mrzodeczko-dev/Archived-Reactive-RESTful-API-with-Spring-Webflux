@@ -238,10 +238,10 @@
             <id>spring-snapshots</id>
             <url>https://repo.spring.io/snapshot</url>
         </pluginRepository>
-        <pluginPlugin>
+        <pluginRepository>
             <id>spring-milestones</id>
             <url>https://repo.spring.io/milestone</url>
-        </pluginPlugin>
+        </pluginRepository>
 
     </pluginRepositories>
 
