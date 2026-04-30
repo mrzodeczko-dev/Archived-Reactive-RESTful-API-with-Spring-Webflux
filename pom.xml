@@ -21,6 +21,43 @@
 
     <dependencies>
 
+        <!--
+            ===== LOGGING CONFLICT FIX =====
+            Problem: spring-boot-starter-logging (pulled transitively by almost every
+            Spring Boot starter) brings logback-classic + log4j-to-slf4j onto the
+            classpath. spring-boot-starter-log4j2 brings log4j-slf4j-impl.
+            Having log4j-slf4j-impl + log4j-to-slf4j together is ILLEGAL and causes
+            ExceptionInInitializerError at startup.
+
+            Fix: declare logback-classic, logback-core and log4j-to-slf4j as DIRECT
+            dependencies with scope=provided. Maven's "nearest definition wins" rule
+            guarantees that a direct declaration always beats any transitive one,
+            regardless of the parent BOM or dependencyManagement ordering.
+            Spring Boot's repackager excludes "provided" deps from BOOT-INF/lib,
+            so they will never appear in /app/lib inside the Docker image.
+        -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- The one and only SLF4J binding -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
@@ -29,16 +66,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
-
-        <!--
-            The sole SLF4J binding. spring-boot-starter-logging (which normally
-            provides logback-classic + log4j-to-slf4j) is globally neutralised
-            via <dependencyManagement> below, so no dual-binding conflict occurs.
-        -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
         <dependency>
@@ -178,30 +205,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
-            <!--
-                ROOT-CAUSE FIX for the dual SLF4J-binding crash:
-
-                  log4j-slf4j-impl  (from spring-boot-starter-log4j2)  — NEEDED
-                  log4j-to-slf4j    (from spring-boot-starter-logging) — ILLEGAL together
-                  logback-classic   (from spring-boot-starter-logging) — ILLEGAL together
-
-                Setting spring-boot-starter-logging itself to scope=provided prevents
-                Maven from including it (and ALL its transitive dependencies: logback-classic,
-                logback-core, log4j-to-slf4j) on the runtime classpath — regardless of which
-                starter transitively pulls it (webflux, security, mail, jasypt, mongock,
-                springdoc…).
-
-                This project's <dependencyManagement> takes precedence over the
-                spring-boot-starter-parent BOM, so this entry wins globally.
-            -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-logging</artifactId>
-                <version>2.4.4</version>
-                <scope>provided</scope>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
@@ -226,7 +229,6 @@
             <id>spring-milestones</id>
             <url>https://repo.spring.io/milestone</url>
         </pluginRepository>
-
     </pluginRepositories>
 
     <build>
