@@ -33,9 +33,6 @@ jwt:
 change-logs-scan-package: com.app.infrastructure.mongo.initscripts
 adminusername: admin123
 
-jasypt:
-  encryptor:
-    password: password
 
 springdoc:
   api-docs:

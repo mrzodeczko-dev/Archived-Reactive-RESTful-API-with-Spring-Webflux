@@ -17,10 +17,6 @@ jwt:
     expiration-time-ms: 28800000
     access-token-key: AccessTokenKey
 
-jasypt:
-  encryptor:
-    password: password
-
 springdoc:
   api-docs:
     groups:
