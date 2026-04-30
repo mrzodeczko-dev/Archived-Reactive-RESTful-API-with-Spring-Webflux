@@ -1,6 +1,19 @@
 # Reactive RESTful API — Spring WebFlux
 
-> Archived project. Fixed for Spring Boot 2.x / Java 17 compatibility — see [fix commit](https://github.com/mrzodeczko-dev/Archived-Reactive-RESTful-API-with-Spring-Webflux/commit/0bac2c97082c9db635f06e1275dacf682869012a).
+> **Archived project** — built a few years ago as a learning exercise and left untouched since.
+> It was **not** migrated to Spring Boot 3 or 4. Instead, the codebase was refreshed just enough
+> to compile and run on its original **Spring Boot 2.4.4 / Java 17** baseline
+> (compatibility fixes: [pom.xml overhaul](https://github.com/mrzodeczko-dev/Archived-Reactive-RESTful-API-with-Spring-Webflux/commit/0bac2c97082c9db635f06e1275dacf682869012a)).
+>
+> ⚠️ **Migration note:** The Spring ecosystem changed significantly between Spring Boot 2.x and
+> Spring Boot 3.x / 4.x. A real migration would require:
+> - Full `javax.*` → `jakarta.*` package rename (breaking change in every file)
+> - Spring Security 6 rewrite — `WebSecurityConfigurerAdapter` removed, replaced with `SecurityFilterChain` beans
+> - Mongock API changes (4.x → 5.x driver model)
+> - Spring Data MongoDB reactive API updates
+> - Minimum Java version bumped to 17 (Boot 3) / 21 (Boot 4)
+>
+> The project is kept as-is for reference and portfolio purposes.
 
 A reactive REST API built with **Domain-Driven Design (DDD)** on top of Spring WebFlux and Netty. The full I/O pipeline is non-blocking: WebFlux router + reactive MongoDB driver + replica set transactions — no blocking thread is ever held during a request.
 
@@ -30,7 +43,7 @@ A reactive REST API built with **Domain-Driven Design (DDD)** on top of Spring W
 | Security | Spring Security + JJWT | 0.11.2 |
 | API docs | springdoc-openapi WebFlux | 1.5.2 |
 | Encryption | Jasypt | 3.0.5 |
-| Tooling | Lombok, BlockHound | 1.0.6.RELEASE |
+| Tooling | Lombok, BlockHound | 1.18.34 / 1.0.6.RELEASE |
 | Java | Eclipse Temurin | 17 |
 | Containerization | Docker / Docker Compose / Docker Swarm | — |
 
