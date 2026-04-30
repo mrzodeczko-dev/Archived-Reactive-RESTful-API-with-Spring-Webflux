@@ -34,18 +34,60 @@ A reactive REST API built with **Domain-Driven Design (DDD)** on top of Spring W
 
 ## Tech Stack
 
+### Core
+
 | Layer | Technology | Version |
 |---|---|---|
 | Framework | Spring Boot | 2.4.4 |
 | Reactive web | Spring WebFlux + Netty | via Boot |
-| Database | MongoDB (reactive driver) | 4.4.4 |
-| DB migrations | Mongock | 4.2.8.BETA |
-| Security | Spring Security + JJWT | 0.11.2 |
-| API docs | springdoc-openapi WebFlux | 1.5.2 |
-| Encryption | Jasypt | 3.0.5 |
-| Tooling | Lombok, BlockHound | 1.18.34 / 1.0.6.RELEASE |
+| Reactive runtime | Project Reactor | via Boot |
 | Java | Eclipse Temurin | 17 |
-| Containerization | Docker / Docker Compose / Docker Swarm | — |
+
+### Persistence
+
+| Layer | Technology | Version |
+|---|---|---|
+| Database | MongoDB | 4.4.4 |
+| Reactive driver | spring-boot-starter-data-mongodb-reactive | via Boot |
+| Sync driver | mongodb-driver-sync | via Boot |
+| DB migrations | Mongock | 4.2.8.BETA |
+
+### Security & Auth
+
+| Layer | Technology | Version |
+|---|---|---|
+| Security | Spring Security (WebFlux) | via Boot |
+| JWT | JJWT (api / impl / jackson) | 0.11.2 |
+| Config encryption | Jasypt Spring Boot Starter | 3.0.5 |
+
+### Observability & Tooling
+
+| Layer | Technology | Version |
+|---|---|---|
+| Logging | Log4j2 (spring-boot-starter-log4j2) | via Boot |
+| API docs | springdoc-openapi WebFlux UI | 1.5.2 |
+| Blocking detector | BlockHound | 1.0.6.RELEASE |
+| Code generation | Lombok | 1.18.34 |
+
+### Utilities
+
+| Library | Purpose | Version |
+|---|---|---|
+| opencsv | CSV parsing | 5.0 |
+| commons-validator | Input validation | 1.7 |
+| joda-time | Date/time handling | 2.10.8 |
+| jackson-databind | JSON serialisation | via Boot |
+| jackson-dataformat-yaml | YAML config support | via Boot |
+| spring-aspects | AOP / AspectJ | 5.3.1 |
+
+### Infrastructure
+
+| Layer | Technology |
+|---|---|
+| Containerization | Docker |
+| Local orchestration | Docker Compose |
+| Production orchestration | Docker Swarm |
+| Build tool | Maven 3.8+ |
 
 ---
 
