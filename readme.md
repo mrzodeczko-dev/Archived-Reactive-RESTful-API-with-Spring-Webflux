@@ -14,13 +14,35 @@
 >
 > The project is kept as-is for reference and portfolio purposes.
 
-A reactive REST API built with **Domain-Driven Design (DDD)** on top of Spring WebFlux and Netty. The full I/O pipeline is non-blocking: WebFlux router + reactive MongoDB driver + replica set transactions — no blocking thread is ever held during a request.
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Business Domain](#business-domain)
+3. [Role-Based Access Control](#role-based-access-control)
+4. [Tech Stack](#tech-stack)
+5. [Prerequisites](#prerequisites)
+6. [Quick Start](#quick-start)
+7. [Architecture](#architecture)
+8. [MongoDB Replica Set](#mongodb-replica-set)
+9. [Docker Commands](#docker-commands)
+10. [OpenAPI / Swagger UI](#openapi--swagger-ui)
+11. [Why Reactive?](#why-reactive)
 
 ---
 
-## Business Domain
+## Overview
 
-This is a **cinema ticketing system** — a backend API for managing a network of cinemas and handling the full ticket purchasing flow.
+A reactive REST API built with **Domain-Driven Design (DDD)** on top of Spring WebFlux and Netty. The full I/O pipeline is non-blocking: WebFlux router + reactive MongoDB driver + replica set transactions — no blocking thread is ever held during a request.
+
+This is a **cinema ticketing system** — a backend API for managing a network of cinemas and handling the full ticket purchasing flow. Users authenticate via JWT and are assigned one of two roles: **USER** or **ADMIN**.
+
+---
+
+[↑ Back to top](#table-of-contents)
+
+## Business Domain
 
 ### User Flow
 
@@ -30,8 +52,6 @@ A typical user journey looks like this:
 2. Pick a movie and find available screenings
 3. Choose seats and place an order
 4. Complete the purchase
-
-Authentication via JWT supports user accounts with two distinct roles: **USER** and **ADMIN**.
 
 ### Domain Model
 
@@ -91,7 +111,11 @@ erDiagram
     USER ||--o{ TICKET_ORDER : "1 user places many orders"
 ```
 
-### Role-Based Access Control
+---
+
+[↑ Back to top](#table-of-contents)
+
+## Role-Based Access Control
 
 | Endpoint | Public | USER | ADMIN |
 |---|:---:|:---:|:---:|
@@ -112,21 +136,6 @@ erDiagram
 - **Public** — registration, login, city browsing, statistics, Swagger docs
 - **USER** — browsing cinemas and movies, managing own tickets and orders
 - **ADMIN** — managing cinemas, importing movies via CSV, creating screenings
-
----
-
-[↑ Back to top](#table-of-contents)
-
-## Table of Contents
-
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [MongoDB Replica Set](#mongodb-replica-set)
-- [Docker Commands](#docker-commands)
-- [OpenAPI / Swagger UI](#openapi--swagger-ui)
-- [Why Reactive?](#why-reactive)
 
 ---
 
@@ -325,8 +334,6 @@ Java 21 introduced **Virtual Threads** (Project Loom, JEP 444) as a production-r
 - ✅ This project uses WebFlux **correctly** — the full stack is non-blocking (reactive MongoDB driver, no JDBC)
 - ✅ Reactive Mongo with replica set transactions is a legitimate use case for WebFlux
 - ⚠️ If this project were greenfield today and used a relational DB, **Spring MVC + Virtual Threads** would likely be the better choice
-
-[↑ Back to top](#table-of-contents)
 
 ---
 
