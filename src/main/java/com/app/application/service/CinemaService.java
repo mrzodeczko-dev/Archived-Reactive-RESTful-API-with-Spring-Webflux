@@ -12,7 +12,6 @@ import com.app.domain.cinema.Cinema;
 import com.app.domain.cinema.CinemaRepository;
 import com.app.domain.cinema_hall.CinemaHall;
 import com.app.domain.cinema_hall.CinemaHallRepository;
-import com.app.domain.city.City;
 import com.app.domain.city.CityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,12 +19,8 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.isNull;
 
 @Service
 @RequiredArgsConstructor
@@ -35,14 +30,12 @@ public class CinemaService {
     private final CinemaHallRepository cinemaHallRepository;
     private final CityRepository cityRepository;
     private final CreateCinemaDtoValidator createCinemaDtoValidator;
-
     private final TransactionalOperator transactionalOperator;
 
     public Mono<CinemaDto> addCinema(CreateCinemaDto createCinemaDto) {
 
         var errors = createCinemaDtoValidator.validate(createCinemaDto);
-
-        if(Validations.hasErrors(errors)){
+        if (Validations.hasErrors(errors)) {
             return Mono.error(() -> new CinemaServiceException(Validations.createErrorMessage(errors)));
         }
 
@@ -61,12 +54,13 @@ public class CinemaService {
                         .build()))
                 .flatMap(cinema ->
                         cityRepository.findByName(createCinemaDto.getCity())
-                                .switchIfEmpty(Mono.error(() -> new CinemaServiceException("No city with name: %s".formatted(createCinemaDto.getCity()))))
+                                .switchIfEmpty(Mono.error(() -> new CinemaServiceException(
+                                        "No city with name: %s".formatted(createCinemaDto.getCity()))))
                                 .flatMap(city -> cinemaHallRepository
                                         .addOrUpdateMany(cinema.getCinemaHalls())
                                         .then(cityRepository.addOrUpdate(city.addCinema(cinema)))
-                                        .then(cinemaRepository.addOrUpdate(cinema.setCity(city.getName()).setCinemasIdForCinemaHalls(cinema.getId())))
-                                ))
+                                        .then(cinemaRepository.addOrUpdate(
+                                                cinema.setCity(city.getName()).setCinemasIdForCinemaHalls(cinema.getId())))))
                 .map(Cinema::toDto)
                 .as(transactionalOperator::transactional);
     }
@@ -84,21 +78,23 @@ public class CinemaService {
     public Mono<CinemaDto> addCinemaHallToCinema(String cinemaId, CreateCinemaHallDto createCinemaHallDto) {
 
         var errors = new CreateCinemaHallDtoValidator().validate(createCinemaHallDto);
-
+        // Replaced synchronous throw before reactive chain with Mono.error()
         if (Validations.hasErrors(errors)) {
-            throw new CinemaServiceException("CreateCinemaHallDto is not valid. Errors are: [%s]".formatted(Validations.createErrorMessage(errors)));
+            return Mono.error(new CinemaServiceException(
+                    "CreateCinemaHallDto is not valid. Errors are: [%s]".formatted(
+                            Validations.createErrorMessage(errors))));
         }
 
         return cinemaRepository
                 .findById(cinemaId)
-                .switchIfEmpty(Mono.error(() -> new CinemaServiceException("No cinema with id: %s".formatted(cinemaId))))
+                .switchIfEmpty(Mono.error(() -> new CinemaServiceException(
+                        "No cinema with id: %s".formatted(cinemaId))))
                 .flatMap(cinema -> cinemaHallRepository
                         .addOrUpdate(createCinemaHallDto.toEntity(cinema.getId()))
-                        .flatMap(savedCinemaHall -> cinemaRepository.addOrUpdate(addCinemaHallToCinema(cinema, savedCinemaHall)))
-                )
+                        .flatMap(savedCinemaHall -> cinemaRepository.addOrUpdate(
+                                addCinemaHallToCinema(cinema, savedCinemaHall))))
                 .map(Cinema::toDto)
                 .as(transactionalOperator::transactional);
-
     }
 
     private Cinema addCinemaHallToCinema(Cinema cinema, CinemaHall cinemaHall) {
