@@ -1,34 +1,38 @@
 package com.app.infrastructure.mongo.initscripts.config;
 
-import com.github.cloudyrock.mongock.driver.mongodb.springdata.v3.SpringDataMongoV3Driver;
-
-import io.changock.runner.spring.v5.SpringInitializingBeanRunner;
+import io.mongock.driver.mongodb.springdata.v4.SpringDataMongoV4Driver;
+import io.mongock.runner.springboot.MongockSpringboot;
+import io.mongock.runner.springboot.base.MongockInitializingBeanRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-import static com.github.cloudyrock.spring.v5.MongockSpring5.builder;
-
+/**
+ * Mongock 5 migration:
+ *   - groupId: com.github.cloudyrock.mongock  ->  io.mongock
+ *   - driver:  SpringDataMongoV3Driver        ->  SpringDataMongoV4Driver
+ *   - builder: MongockSpring5.builder()       ->  MongockSpringboot.builder()
+ *   - runner type: SpringInitializingBeanRunner -> MongockInitializingBeanRunner
+ *   - addChangeLogsScanPackage()              stays the same
+ */
 @Configuration
 public class MongoMigrationConfiguration {
 
     @Value("${change-logs-scan-package}")
     private String changeLogsScanPackage;
 
-
     @Bean
-    public SpringInitializingBeanRunner mongockInitializingBeanRunner(
+    public MongockInitializingBeanRunner mongockInitializingBeanRunner(
             ApplicationContext springContext,
             MongoTemplate mongoTemplate) {
-        return builder()
-                .setDriver(SpringDataMongoV3Driver.withDefaultLock(mongoTemplate))
-                .addChangeLogsScanPackage(changeLogsScanPackage)
+        return MongockSpringboot
+                .builder()
+                .setDriver(SpringDataMongoV4Driver.withDefaultLock(mongoTemplate))
+                .addMigrationScanPackage(changeLogsScanPackage)
                 .setSpringContext(springContext)
-                .dontFailIfCannotAcquireLock()
+                .setTransactionEnabled(false)
                 .buildInitializingBeanRunner();
     }
-
-
 }
