@@ -51,12 +51,6 @@ public class StatisticsService {
                                 .build()));
     }
 
-    /**
-     * Fixed double subscription on cold Flux.
-     * Previously findCitiesFrequency() was subscribed twice (once for collectList to find max,
-     * once for filter), causing two separate DB query rounds with potentially inconsistent results.
-     * Now: collect once into a list, then find max and filter in-memory.
-     */
     public Flux<CityFrequencyDto> findCitiesWithMostFrequency() {
         return findCitiesFrequency()
                 .collectList()
@@ -134,12 +128,6 @@ public class StatisticsService {
                                 .build()));
     }
 
-    /**
-     * Fixed two bugs:
-     * 1. numberOfSameMaxVal was never incremented, so limit(0) always produced an empty map.
-     *    Removed the broken limit() — all entries are now returned after summing by key.
-     * 2. Logic simplified: collect to map summing values, then filter only entries matching the max.
-     */
     private <T> Map<T, Integer> reduceMultiMapToMapWithMaxElementOf(Map<T, Collection<Integer>> multiMap) {
         Map<T, Integer> summedMap = multiMap.entrySet().stream()
                 .collect(Collectors.toMap(
@@ -174,11 +162,6 @@ public class StatisticsService {
                         .build());
     }
 
-    /**
-     * Fixed potential ArithmeticException (/ by zero).
-     * Previously counter.get() was evaluated as argument to divide() before the stream terminal
-     * operation ran, so it was always 0. Replaced with tickets.size().
-     */
     private BigDecimal averageTicketPrice(List<Ticket> tickets) {
         if (tickets.isEmpty()) {
             return BigDecimal.ZERO;

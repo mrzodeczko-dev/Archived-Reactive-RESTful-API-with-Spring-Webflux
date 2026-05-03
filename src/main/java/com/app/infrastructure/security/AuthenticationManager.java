@@ -26,12 +26,6 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
     public Mono<Authentication> authenticate(Authentication authentication) {
         var token = authentication.getCredentials().toString();
 
-        /*
-         * Fixed: previously used a synchronous try/catch block around the reactive chain.
-         * isTokenValid() can throw JwtException (e.g. malformed/expired token) synchronously.
-         * Wrapping in Mono.fromCallable() ensures any thrown exception is captured
-         * and propagated reactively via onError instead of being thrown on the subscriber thread.
-         */
         return Mono.fromCallable(() -> appTokensService.isTokenValid(token))
                 .onErrorMap(e -> new AuthenticationException("User cannot be authenticated: " + e.getMessage()))
                 .flatMap(isValid -> {

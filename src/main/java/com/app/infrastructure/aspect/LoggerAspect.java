@@ -23,15 +23,9 @@ public class LoggerAspect {
         var result = joinPoint.proceed();
 
         if (result instanceof Mono<?> monoResult) {
-            /*
-             * Fixed: previously System.currentTimeMillis() was captured at assembly time
-             * (before subscription), so it measured Mono construction, not actual execution.
-             * Using AtomicLong + doOnSubscribe captures the real start of execution.
-             */
             var startTime = new AtomicLong();
             return monoResult
-                    .doOnSubscribe(subscription ->
-                            startTime.set(System.currentTimeMillis()))
+                    .doOnSubscribe(subscription -> startTime.set(System.currentTimeMillis()))
                     .doOnSuccess(o -> {
                         if (Objects.nonNull(o) && o instanceof ServerResponse resp) {
                             log.info("Invoking method: {}", Arrays.toString(joinPoint.getArgs()));
