@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Aspect
 @Slf4j
@@ -19,20 +20,25 @@ public class LoggerAspect {
     @Around("@annotation(com.app.infrastructure.aspect.annotations.Loggable)")
     public Mono<?> logAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        long start = System.currentTimeMillis();
         var result = joinPoint.proceed();
 
         if (result instanceof Mono<?> monoResult) {
+            /*
+             * Fixed: previously System.currentTimeMillis() was captured at assembly time
+             * (before subscription), so it measured Mono construction, not actual execution.
+             * Using AtomicLong + doOnSubscribe captures the real start of execution.
+             */
+            var startTime = new AtomicLong();
             return monoResult
+                    .doOnSubscribe(subscription ->
+                            startTime.set(System.currentTimeMillis()))
                     .doOnSuccess(o -> {
                         if (Objects.nonNull(o) && o instanceof ServerResponse resp) {
-
-                            log.info("Invoking method: %s".formatted(Arrays.toString(joinPoint.getArgs())));
-                            log.info("Response code: %d".formatted(resp.rawStatusCode()));
-                            log.info("Execution time: %d ms".formatted(System.currentTimeMillis() - start));
+                            log.info("Invoking method: {}", Arrays.toString(joinPoint.getArgs()));
+                            log.info("Response code: {}", resp.rawStatusCode());
+                            log.info("Execution time: {} ms", System.currentTimeMillis() - startTime.get());
                         }
                     });
-
         }
 
         return Mono.empty();

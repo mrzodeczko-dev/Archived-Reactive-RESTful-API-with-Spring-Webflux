@@ -1,6 +1,5 @@
 package com.app.infrastructure.security;
 
-import com.app.application.dto.ResponseDto;
 import com.app.application.exception.AuthenticationException;
 import com.app.domain.security.UserRepository;
 import com.app.infrastructure.security.tokens.AppTokensService;
@@ -25,22 +24,28 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
+        var token = authentication.getCredentials().toString();
 
-        try {
-            if (!appTokensService.isTokenValid(authentication.getCredentials().toString())) {
-                return Mono.error(() -> new AuthenticationException("AUTH FAILED - TOKEN IS NOT VALID"));
-            }
-            return userRepository
-                    .findById(appTokensService.getId(authentication.getCredentials().toString()))
-                    .switchIfEmpty(Mono.error(() -> new AuthenticationException("Wrong username")))
-                    .map(userFromDb -> new UsernamePasswordAuthenticationToken(
-                            userFromDb.getUsername(),
-                            null,
-                            List.of(new SimpleGrantedAuthority(userFromDb.getRole().toString()))
-                    ));
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            return Mono.error(() -> new AuthenticationException("User cannot be authenticated"));
-        }
+        /*
+         * Fixed: previously used a synchronous try/catch block around the reactive chain.
+         * isTokenValid() can throw JwtException (e.g. malformed/expired token) synchronously.
+         * Wrapping in Mono.fromCallable() ensures any thrown exception is captured
+         * and propagated reactively via onError instead of being thrown on the subscriber thread.
+         */
+        return Mono.fromCallable(() -> appTokensService.isTokenValid(token))
+                .onErrorMap(e -> new AuthenticationException("User cannot be authenticated: " + e.getMessage()))
+                .flatMap(isValid -> {
+                    if (!isValid) {
+                        return Mono.error(() -> new AuthenticationException("AUTH FAILED - TOKEN IS NOT VALID"));
+                    }
+                    return userRepository
+                            .findById(appTokensService.getId(token))
+                            .switchIfEmpty(Mono.error(() -> new AuthenticationException("Wrong username")))
+                            .map(userFromDb -> (Authentication) new UsernamePasswordAuthenticationToken(
+                                    userFromDb.getUsername(),
+                                    null,
+                                    List.of(new SimpleGrantedAuthority(userFromDb.getRole().toString()))
+                            ));
+                });
     }
 }

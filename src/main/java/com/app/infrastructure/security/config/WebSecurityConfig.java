@@ -23,7 +23,6 @@ import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
 import reactor.core.publisher.Mono;
 
-
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 @Slf4j
@@ -43,12 +42,20 @@ public class WebSecurityConfig {
     @Bean
     public ServerAuthenticationEntryPoint serverAuthenticationEntryPoint() {
         return (serverWebExchange, e) -> {
-            serverWebExchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            // Fixed: was incorrectly returning 500 INTERNAL_SERVER_ERROR.
+            // 401 UNAUTHORIZED is the correct status when authentication is missing or invalid.
+            serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             serverWebExchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             try {
                 return serverWebExchange
                         .getResponse()
-                        .writeWith(Mono.just(dataBufferFactory.wrap(objectMapper.writeValueAsBytes(ResponseDto.builder().error(ErrorMessageDto.builder().message(e.getMessage()).build()).build()))));
+                        .writeWith(Mono.just(dataBufferFactory.wrap(
+                                objectMapper.writeValueAsBytes(
+                                        ResponseDto.builder()
+                                                .error(ErrorMessageDto.builder()
+                                                        .message(e.getMessage())
+                                                        .build())
+                                                .build()))));
             } catch (JsonProcessingException exception) {
                 log.error(exception.getMessage(), exception);
             }
@@ -61,10 +68,8 @@ public class WebSecurityConfig {
     @Bean
     public ServerAccessDeniedHandler serverAccessDeniedHandler() {
         return (serverWebExchange, e) -> {
-
             serverWebExchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-
             return serverWebExchange
                     .getResponse()
                     .writeWith(serverWebExchange.getPrincipal()
@@ -74,7 +79,8 @@ public class WebSecurityConfig {
                                             .wrap(objectMapper.writeValueAsBytes(ResponseDto
                                                     .builder()
                                                     .error(ErrorMessageDto.builder()
-                                                            .message("%s for username: %s".formatted(e.getMessage(), principal.getName()))
+                                                            .message("%s for username: %s"
+                                                                    .formatted(e.getMessage(), principal.getName()))
                                                             .build())
                                                     .build()));
                                 } catch (JsonProcessingException exception) {
@@ -88,18 +94,13 @@ public class WebSecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-
-                .csrf()
-                .disable()
-
-                .formLogin()
-                .disable()
-
-                .httpBasic()
-                .disable()
+                .csrf().disable()
+                .formLogin().disable()
+                .httpBasic().disable()
 
                 .authenticationManager(authenticationManager)
                 .securityContextRepository(securityContextRepository)
+
                 .exceptionHandling()
                 .authenticationEntryPoint(serverAuthenticationEntryPoint())
                 .accessDeniedHandler(serverAccessDeniedHandler())
@@ -110,13 +111,16 @@ public class WebSecurityConfig {
                 .pathMatchers("/register").permitAll()
                 .pathMatchers("/login").permitAll()
 
-                .pathMatchers("/users/**").permitAll()/*hasRole("ADMIN")*/
+                // Fixed: previously permitAll() — enforcing proper role restrictions
+                .pathMatchers("/users/**").hasRole("ADMIN")
                 .pathMatchers("/statistics/**").permitAll()
 
                 .pathMatchers(HttpMethod.GET, "/cinemas").hasRole("USER")
-
                 .pathMatchers("/cinemas/**").hasRole("ADMIN")
-                .pathMatchers("/cities/**").permitAll()/*hasRole("USER")*/
+
+                // Fixed: previously permitAll() — enforcing proper role restrictions
+                .pathMatchers("/cities/**").hasRole("USER")
+
                 .pathMatchers(HttpMethod.POST, "/movies/csv").hasRole("ADMIN")
                 .pathMatchers("/movies/**").hasAnyRole("USER", "ADMIN")
                 .pathMatchers("/tickets/**").hasRole("USER")

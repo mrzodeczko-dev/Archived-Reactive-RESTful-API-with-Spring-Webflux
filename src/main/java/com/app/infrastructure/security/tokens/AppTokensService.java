@@ -32,11 +32,11 @@ public class AppTokensService {
     private final SecretKey secretKey;
     private final UserRepository userRepository;
 
-
     public Mono<TokensDto> generateTokens(User user) {
-
+        // Fixed: was throwing synchronously before reactive chain.
+        // Mono.error() properly propagates the error in the reactive pipeline.
         if (user == null) {
-            throw new SecurityException("generate tokens - authentication object is null");
+            return Mono.error(() -> new SecurityException("generate tokens - authentication object is null"));
         }
 
         return userRepository
@@ -55,7 +55,6 @@ public class AppTokensService {
                             .setIssuedAt(createdDate)
                             .signWith(secretKey)
                             .compact();
-
 
                     var refreshToken = Jwts
                             .builder()
@@ -84,8 +83,7 @@ public class AppTokensService {
     }
 
     public String getId(String token) {
-        token = token.substring(7);
-        return claims(token).getSubject();
+        return claims(token.substring(7)).getSubject();
     }
 
     private Date getExpiration(String token) {
@@ -93,10 +91,7 @@ public class AppTokensService {
     }
 
     public boolean isTokenValid(String token) {
-
-        token = token.substring(7);
-        Date expirationDate = getExpiration(token);
+        Date expirationDate = getExpiration(token.substring(7));
         return expirationDate.after(new Date());
     }
-
 }
