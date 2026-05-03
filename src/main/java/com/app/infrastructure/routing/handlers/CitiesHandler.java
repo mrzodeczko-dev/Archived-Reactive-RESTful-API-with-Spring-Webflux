@@ -1,6 +1,7 @@
 package com.app.infrastructure.routing.handlers;
 
 import com.app.application.dto.*;
+import com.app.application.exception.CityServiceException;
 import com.app.application.service.CityService;
 import com.app.infrastructure.aspect.annotations.Loggable;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,8 +23,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class CitiesHandler {
@@ -42,40 +41,15 @@ public class CitiesHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
-    public Mono<ServerResponse> addCity(ServerRequest request) {
-
-        return cityService.addCity(request.bodyToMono(CreateCityDto.class))
-                .flatMap(savedCity -> ServerResponse
+    public Mono<ServerResponse> addCity(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(CreateCityDto.class)
+                .switchIfEmpty(Mono.error(() -> new CityServiceException("Request body is empty")))
+                .flatMap(cityService::addCity)
+                .flatMap(cityDto -> ServerResponse
                         .status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(savedCity))
-                );
-    }
-
-    @Loggable
-    @Operation(
-            summary = "GET city by name",
-            parameters = {@Parameter(in = ParameterIn.PATH, name = "name", description = "City name")},
-            security = @SecurityRequirement(name = "JwtAuthToken"))
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Success", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = CityDto.class))
-            }),
-            @ApiResponse(responseCode = "500", description = "Error", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
-            })
-
-    })
-    public Mono<ServerResponse> findByName(ServerRequest request) {
-
-        return cityService.findByName(request.pathVariable("name"))
-                .flatMap(city -> ServerResponse
-                        .status(HttpStatus.OK)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(city)));
-
+                        .body(BodyInserters.fromValue(cityDto)));
     }
 
     @Loggable
@@ -89,41 +63,34 @@ public class CitiesHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
-
         return cityService.getAll()
                 .collectList()
                 .flatMap(cities -> ServerResponse
                         .status(HttpStatus.OK)
-                        .header("Access-Control-Allow-Origin", "*")
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(BodyInserters.fromValue(cities)));
     }
 
     @Loggable
     @Operation(
-            summary = "POST add city",
-            requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = CreateCityDto.class))),
+            summary = "GET city by name",
+            parameters = @Parameter(in = ParameterIn.PATH, name = "name", description = "city name"),
             security = @SecurityRequirement(name = "JwtAuthToken"))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = AddCinemaToCityDto.class))
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CityDto.class))
             }),
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
-    public Mono<ServerResponse> addCinemaToCity(ServerRequest serverRequest) {
-
-        return serverRequest.bodyToMono(AddCinemaToCityDto.class)
-                .flatMap(dto -> cityService.addCinemaToCity(dto)
-                        .flatMap(city -> ServerResponse.status(HttpStatus.OK)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .body(BodyInserters.fromValue((city))))
-
-                );
+    public Mono<ServerResponse> getByName(ServerRequest serverRequest) {
+        return cityService.getByName(serverRequest.pathVariable("name"))
+                .flatMap(cityDto -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromValue(cityDto)));
     }
 }

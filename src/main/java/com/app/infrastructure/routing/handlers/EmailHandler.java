@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -45,15 +44,18 @@ public class EmailHandler {
             })
     })
     public Mono<ServerResponse> sendSingleEmail(ServerRequest serverRequest) {
-
         return serverRequest.bodyToMono(CreateMailDto.class)
                 .switchIfEmpty(Mono.error(() -> new EmailServiceException("No mail info defined")))
                 .flatMap(emailService::sendSingleEmail)
                 .flatMap(mailDto -> ServerResponse
-                        .status(HttpStatus.OK)
+                        .status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(mailDto))
-                );
+                        .body(BodyInserters.fromValue(mailDto)))
+                .onErrorResume(EmailServiceException.class, e ->
+                        ServerResponse
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(ResponseErrorDto.builder().message(e.getMessage()).build()));
     }
 
     @Loggable
@@ -68,18 +70,20 @@ public class EmailHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> sendMultipleEmails(ServerRequest serverRequest) {
-
         return serverRequest.bodyToMono(CreateMailsDto.class)
                 .switchIfEmpty(Mono.error(() -> new EmailServiceException("No mails info defined")))
-                .map(emailService::sendMultipleEmails)
-                .flatMap(Flux::collectList)
+                .flatMapMany(emailService::sendMultipleEmails)
+                .collectList()
                 .flatMap(list -> ServerResponse
-                        .status(HttpStatus.OK)
+                        .status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list)
-                        ));
+                        .body(BodyInserters.fromValue(list)))
+                .onErrorResume(EmailServiceException.class, e ->
+                        ServerResponse
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(ResponseErrorDto.builder().message(e.getMessage()).build()));
     }
 }

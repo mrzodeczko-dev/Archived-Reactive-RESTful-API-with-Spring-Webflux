@@ -4,107 +4,45 @@ import com.app.application.dto.CreateMailDto;
 import com.app.application.dto.CreateMailsDto;
 import com.app.application.dto.MailDto;
 import com.app.application.exception.EmailServiceException;
-import com.app.application.validator.CreateMailDtoValidator;
-import com.app.application.validator.CreateMailsDtoValidator;
-import com.app.application.validator.util.Validations;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.List;
-import java.util.Map;
-
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class EmailService {
 
-
     private final JavaMailSender mailSender;
-    private final CreateMailDtoValidator createMailDtoValidator;
-    private final CreateMailsDtoValidator createMailsDtoValidator;
-
 
     public Mono<MailDto> sendSingleEmail(CreateMailDto createMailDto) {
-
-        var errors = createMailDtoValidator.validate(createMailDto);
-
-        if (Validations.hasErrors(errors)) {
-            return Mono.error(() -> new EmailServiceException("Mail is not valid. Errors are: [%s]".formatted(Validations.createErrorMessage(errors))));
+        if (createMailDto == null) {
+            return Mono.error(() -> new EmailServiceException("Mail data is null"));
         }
-
-        return Mono.fromCallable(() -> sendAsHtml(createMailDto))
+        return Mono.fromCallable(() -> {
+                    var message = new SimpleMailMessage();
+                    message.setTo(createMailDto.getTo());
+                    message.setSubject(createMailDto.getSubject());
+                    message.setText(createMailDto.getText());
+                    mailSender.send(message);
+                    return MailDto.builder()
+                            .to(createMailDto.getTo())
+                            .subject(createMailDto.getSubject())
+                            .text(createMailDto.getText())
+                            .build();
+                })
                 .subscribeOn(Schedulers.boundedElastic())
-                .map(CreateMailDto::toMailDto);
+                .onErrorMap(e -> new EmailServiceException("Failed to send email: " + e.getMessage()));
     }
 
-    public Flux<MailDto> sendMultipleEmails(CreateMailsDto createMailDtoList) {
-
-        var errors = createMailsDtoValidator.validate(createMailDtoList);
-
-        if (Validations.hasErrors(errors)) {
-            return Flux.error(() -> new EmailServiceException("Some mails are not valid. Errors are: [%s]".formatted(Validations.createErrorMessage(errors))));
+    public Flux<MailDto> sendMultipleEmails(CreateMailsDto createMailsDto) {
+        if (createMailsDto == null || createMailsDto.getMails() == null) {
+            return Flux.error(() -> new EmailServiceException("Mails data is null"));
         }
-
-        return Mono.fromCallable(() -> sendAsHtml(createMailDtoList.getMails()))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(Flux::fromIterable)
-                .map(CreateMailDto::toMailDto);
+        return Flux.fromIterable(createMailsDto.getMails())
+                .flatMap(this::sendSingleEmail);
     }
-
-    private MimeMessage createMimeMessage(CreateMailDto createMailDto) {
-
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, false);
-            messageHelper.setText(createMailDto.getHtmlContent(), true);
-            messageHelper.setTo(createMailDto.getTo());
-            messageHelper.setSubject(createMailDto.getTitle());
-            return mimeMessage;
-        } catch (MessagingException e) {
-            log.info("Exception during message generation");
-            log.error(e.getMessage(), e);
-            throw new EmailServiceException(e.getMessage());
-        }
-    }
-
-    private CreateMailDto sendAsHtml(CreateMailDto createMailDto) {
-
-        try {
-            MimeMessage mimeMessage = createMimeMessage(createMailDto);
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, false);
-            messageHelper.setText(createMailDto.getHtmlContent(), true);
-            messageHelper.setTo(createMailDto.getTo());
-            messageHelper.setSubject(createMailDto.getTitle());
-            mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
-            log.info("Exception during mail sending");
-            log.error(e.getMessage(), e);
-            throw new EmailServiceException(e.getMessage());
-        }
-
-        return createMailDto;
-    }
-
-    private List<CreateMailDto> sendAsHtml(List<CreateMailDto> createMailDtos) {
-
-        sendBulk(createMailDtos
-                .stream()
-                .map(this::createMimeMessage)
-                .toArray(MimeMessage[]::new));
-
-        return createMailDtos;
-    }
-
-    private void sendBulk(MimeMessage... messages) {
-        mailSender.send(messages);
-    }
-
 }

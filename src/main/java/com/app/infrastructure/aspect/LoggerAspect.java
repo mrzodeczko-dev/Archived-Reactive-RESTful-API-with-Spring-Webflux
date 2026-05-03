@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
@@ -18,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class LoggerAspect {
 
     @Around("@annotation(com.app.infrastructure.aspect.annotations.Loggable)")
-    public Mono<?> logAround(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
         var result = joinPoint.proceed();
 
@@ -32,6 +33,16 @@ public class LoggerAspect {
                             log.info("Response code: {}", resp.rawStatusCode());
                             log.info("Execution time: {} ms", System.currentTimeMillis() - startTime.get());
                         }
+                    });
+        }
+
+        if (result instanceof Flux<?> fluxResult) {
+            var startTime = new AtomicLong();
+            return fluxResult
+                    .doOnSubscribe(subscription -> startTime.set(System.currentTimeMillis()))
+                    .doOnComplete(() -> {
+                        log.info("Invoking method: {}", Arrays.toString(joinPoint.getArgs()));
+                        log.info("Execution time: {} ms", System.currentTimeMillis() - startTime.get());
                     });
         }
 
