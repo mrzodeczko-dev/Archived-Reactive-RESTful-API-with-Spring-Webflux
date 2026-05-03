@@ -33,8 +33,6 @@ public class AppTokensService {
     private final UserRepository userRepository;
 
     public Mono<TokensDto> generateTokens(User user) {
-        // Fixed: was throwing synchronously before reactive chain.
-        // Mono.error() properly propagates the error in the reactive pipeline.
         if (user == null) {
             return Mono.error(() -> new SecurityException("generate tokens - authentication object is null"));
         }

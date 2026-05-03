@@ -42,8 +42,6 @@ public class WebSecurityConfig {
     @Bean
     public ServerAuthenticationEntryPoint serverAuthenticationEntryPoint() {
         return (serverWebExchange, e) -> {
-            // Fixed: was incorrectly returning 500 INTERNAL_SERVER_ERROR.
-            // 401 UNAUTHORIZED is the correct status when authentication is missing or invalid.
             serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             serverWebExchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             try {
@@ -111,14 +109,11 @@ public class WebSecurityConfig {
                 .pathMatchers("/register").permitAll()
                 .pathMatchers("/login").permitAll()
 
-                // Fixed: previously permitAll() — enforcing proper role restrictions
                 .pathMatchers("/users/**").hasRole("ADMIN")
                 .pathMatchers("/statistics/**").permitAll()
 
                 .pathMatchers(HttpMethod.GET, "/cinemas").hasRole("USER")
                 .pathMatchers("/cinemas/**").hasRole("ADMIN")
-
-                // Fixed: previously permitAll() — enforcing proper role restrictions
                 .pathMatchers("/cities/**").hasRole("USER")
 
                 .pathMatchers(HttpMethod.POST, "/movies/csv").hasRole("ADMIN")

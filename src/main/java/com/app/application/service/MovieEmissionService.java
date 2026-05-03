@@ -109,12 +109,6 @@ public class MovieEmissionService {
 
         int size = movieEmissionTimesInDay.size();
 
-        /*
-         * Replaced peek()+AtomicInteger counter with IntStream.range —
-         * peek() is for debugging only; side-effects inside stream operators
-         * break referential transparency and are an anti-pattern.
-         * First and last intervals get a break margin added; middle intervals keep original bounds.
-         */
         var bookedTimeSpace = IntStream.range(0, size)
                 .mapToObj(i -> {
                     Interval interval = movieEmissionTimesInDay.get(i);

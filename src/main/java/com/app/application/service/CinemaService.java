@@ -78,7 +78,6 @@ public class CinemaService {
     public Mono<CinemaDto> addCinemaHallToCinema(String cinemaId, CreateCinemaHallDto createCinemaHallDto) {
 
         var errors = new CreateCinemaHallDtoValidator().validate(createCinemaHallDto);
-        // Replaced synchronous throw before reactive chain with Mono.error()
         if (Validations.hasErrors(errors)) {
             return Mono.error(new CinemaServiceException(
                     "CreateCinemaHallDto is not valid. Errors are: [%s]".formatted(
