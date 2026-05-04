@@ -99,7 +99,6 @@ public class EmailService {
     }
 
     private List<CreateMailDto> sendAsHtml(List<CreateMailDto> createMailDtos) {
-
         sendBulk(createMailDtos
                 .stream()
                 .map(this::createMimeMessage)
