@@ -19,18 +19,15 @@ import reactor.core.scheduler.Schedulers;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class EmailService {
 
-
     private final JavaMailSender mailSender;
     private final CreateMailDtoValidator createMailDtoValidator;
     private final CreateMailsDtoValidator createMailsDtoValidator;
-
 
     public Mono<MailDto> sendSingleEmail(CreateMailDto createMailDto) {
 
@@ -76,20 +73,7 @@ public class EmailService {
     }
 
     private CreateMailDto sendAsHtml(CreateMailDto createMailDto) {
-
-        try {
-            MimeMessage mimeMessage = createMimeMessage(createMailDto);
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, false);
-            messageHelper.setText(createMailDto.getHtmlContent(), true);
-            messageHelper.setTo(createMailDto.getTo());
-            messageHelper.setSubject(createMailDto.getTitle());
-            mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
-            log.info("Exception during mail sending");
-            log.error(e.getMessage(), e);
-            throw new EmailServiceException(e.getMessage());
-        }
-
+        mailSender.send(createMimeMessage(createMailDto));
         return createMailDto;
     }
 
@@ -106,5 +90,4 @@ public class EmailService {
     private void sendBulk(MimeMessage... messages) {
         mailSender.send(messages);
     }
-
 }
