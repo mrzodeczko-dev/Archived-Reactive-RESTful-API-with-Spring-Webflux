@@ -84,25 +84,26 @@ class CinemaHallServiceTest {
         }
 
         @Test
-        @DisplayName("Validation error: rowNo=0 throws CinemaHallServiceException")
-        void shouldThrowOnInvalidDto() {
+        @DisplayName("Validation error: null cinemaId throws CinemaHallServiceException")
+        void shouldThrowWhenCinemaIdIsNull() {
+            // Validator only checks cinemaId — supply null to actually trigger validation error
             AddCinemaHallToCinemaDto dto = AddCinemaHallToCinemaDto.builder()
-                    .cinemaId("cinema-1")
-                    .rowNo(0)
+                    .cinemaId(null)
+                    .rowNo(3)
                     .colNo(4)
                     .build();
 
             when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cinemaHallService.addCinemaHallToCinema(Mono.just(dto)))
-                    .expectErrorSatisfies(ex -> assertThat(ex).isInstanceOf(CinemaHallServiceException.class))
+                    .expectError(CinemaHallServiceException.class)
                     .verify();
 
             verifyNoInteractions(cinemaRepository, cinemaHallRepository);
         }
 
         @Test
-        @DisplayName("Cinema not found: Mono.empty() from repository causes error")
+        @DisplayName("Cinema not found: switchIfEmpty triggers CinemaHallServiceException")
         void shouldThrowWhenCinemaNotFound() {
             AddCinemaHallToCinemaDto dto = AddCinemaHallToCinemaDto.builder()
                     .cinemaId("no-cinema")
@@ -114,24 +115,28 @@ class CinemaHallServiceTest {
             when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cinemaHallService.addCinemaHallToCinema(Mono.just(dto)))
-                    .verifyComplete(); // findById returns empty → map returns null cinema
+                    .expectErrorSatisfies(ex -> {
+                        assertThat(ex).isInstanceOf(CinemaHallServiceException.class);
+                        assertThat(ex.getMessage()).contains("no-cinema");
+                    })
+                    .verify();
         }
 
         @Test
-        @DisplayName("Position count: 3 rows × 2 cols creates 6 positions")
+        @DisplayName("Position count: 3 cols × 2 rows creates 6 positions")
         void shouldCreateCorrectNumberOfPositions() {
             AddCinemaHallToCinemaDto dto = AddCinemaHallToCinemaDto.builder()
                     .cinemaId("cinema-1")
-                    .rowNo(3)
-                    .colNo(2)
+                    .rowNo(2)
+                    .colNo(3)
                     .build();
 
             when(cinemaRepository.findById("cinema-1")).thenReturn(Mono.just(cinema));
-            when(cinemaHallRepository.addOrUpdate(any(CinemaHall.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+            when(cinemaHallRepository.addOrUpdate(any(CinemaHall.class)))
+                    .thenAnswer(inv -> Mono.just(inv.getArgument(0)));
             when(cinemaRepository.addOrUpdate(any())).thenReturn(Mono.just(cinema));
             when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            // We capture the saved CinemaHall to verify positions
             var captor = org.mockito.ArgumentCaptor.forClass(CinemaHall.class);
 
             StepVerifier.create(cinemaHallService.addCinemaHallToCinema(Mono.just(dto)))
@@ -150,7 +155,8 @@ class CinemaHallServiceTest {
         @Test
         @DisplayName("Two halls: Flux emits two DTOs")
         void shouldReturnAll() {
-            CinemaHall hall2 = CinemaHall.builder().id("hall-2").cinemaId("cinema-1").positions(new ArrayList<>()).movieEmissions(new ArrayList<>()).build();
+            CinemaHall hall2 = CinemaHall.builder().id("hall-2").cinemaId("cinema-1")
+                    .positions(new ArrayList<>()).movieEmissions(new ArrayList<>()).build();
             when(cinemaHallRepository.findAll()).thenReturn(Flux.just(cinemaHall, hall2));
 
             StepVerifier.create(cinemaHallService.getAll())

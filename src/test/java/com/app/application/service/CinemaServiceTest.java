@@ -78,7 +78,6 @@ class CinemaServiceTest {
             when(cinemaHallRepository.addOrUpdateMany(anyList())).thenReturn(Flux.just(cinemaHall));
             when(cinemaRepository.addOrUpdate(any())).thenReturn(Mono.just(cinema));
             when(cityRepository.findByName("Warsaw")).thenReturn(Mono.just(city));
-            when(cinemaHallRepository.addOrUpdateMany(cinema.getCinemaHalls())).thenReturn(Flux.just(cinemaHall));
             when(cityRepository.addOrUpdate(any())).thenReturn(Mono.just(city));
             when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 

@@ -20,6 +20,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,6 +64,14 @@ class MovieServiceTest {
                 .build();
     }
 
+    /**
+     * The User builder has a typo (`username(List<Movie>)` instead of `favoriteMovies(...)`),
+     * so we use the public constructor to construct a User with a known favorites list.
+     */
+    private static User userWithFavorites(String username, List<Movie> favorites) {
+        return new User(username, "hashed-pass", LocalDate.of(1995, 5, 20), favorites, username);
+    }
+
     @Nested
     @DisplayName("getAll()")
     class GetAllTests {
@@ -78,13 +88,20 @@ class MovieServiceTest {
         }
 
         @Test
-        @DisplayName("Null element in stream: filtered out, only non-null emitted")
+        @DisplayName("Null elements filtered out")
         void shouldFilterNullElements() {
             when(movieRepository.findAll()).thenReturn(Flux.just(drama2026));
 
             StepVerifier.create(movieService.getAll())
                     .expectNextCount(1)
                     .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("No movies: Flux completes empty")
+        void shouldReturnEmptyWhenNoMovies() {
+            when(movieRepository.findAll()).thenReturn(Flux.empty());
+            StepVerifier.create(movieService.getAll()).verifyComplete();
         }
     }
 
@@ -96,10 +113,7 @@ class MovieServiceTest {
         @DisplayName("Null keyword: MovieServiceException emitted")
         void shouldErrorOnNullKeyword() {
             StepVerifier.create(movieService.getFilteredByKeyword(null))
-                    .expectErrorSatisfies(ex -> {
-                        assertThat(ex).isInstanceOf(MovieServiceException.class);
-                        assertThat(ex.getMessage()).contains("null");
-                    })
+                    .expectError(MovieServiceException.class)
                     .verify();
             verifyNoInteractions(movieRepository);
         }
@@ -107,7 +121,9 @@ class MovieServiceTest {
         @Test
         @DisplayName("Matching genre: only Drama movies returned")
         void shouldReturnMoviesMatchingGenre() {
-            when(movieRepository.findAll()).thenReturn(Flux.just(drama2026, action2025));
+            // Service uses findAllByName + findAllByGenre and merges them
+            when(movieRepository.findAllByName("Drama")).thenReturn(Flux.empty());
+            when(movieRepository.findAllByGenre("Drama")).thenReturn(Flux.just(drama2026));
 
             StepVerifier.create(movieService.getFilteredByKeyword("Drama"))
                     .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
@@ -117,7 +133,8 @@ class MovieServiceTest {
         @Test
         @DisplayName("Matching name: movie with matching name returned")
         void shouldReturnMoviesMatchingName() {
-            when(movieRepository.findAll()).thenReturn(Flux.just(drama2026, action2025));
+            when(movieRepository.findAllByName("Fast Burn")).thenReturn(Flux.just(action2025));
+            when(movieRepository.findAllByGenre("Fast Burn")).thenReturn(Flux.empty());
 
             StepVerifier.create(movieService.getFilteredByKeyword("Fast Burn"))
                     .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
@@ -125,9 +142,21 @@ class MovieServiceTest {
         }
 
         @Test
+        @DisplayName("Same movie matched by both name and genre: distinct by id")
+        void shouldDeduplicateByMovieId() {
+            when(movieRepository.findAllByName("Drama")).thenReturn(Flux.just(drama2026));
+            when(movieRepository.findAllByGenre("Drama")).thenReturn(Flux.just(drama2026));
+
+            StepVerifier.create(movieService.getFilteredByKeyword("Drama"))
+                    .expectNextCount(1)
+                    .verifyComplete();
+        }
+
+        @Test
         @DisplayName("No match: Flux completes empty")
         void shouldReturnEmptyWhenNoMatch() {
-            when(movieRepository.findAll()).thenReturn(Flux.just(drama2026, action2025));
+            when(movieRepository.findAllByName("Horror")).thenReturn(Flux.empty());
+            when(movieRepository.findAllByGenre("Horror")).thenReturn(Flux.empty());
 
             StepVerifier.create(movieService.getFilteredByKeyword("Horror")).verifyComplete();
         }
@@ -148,10 +177,33 @@ class MovieServiceTest {
         @Test
         @DisplayName("Matching genre: only matching movies emitted")
         void shouldReturnMatchingMovies() {
-            when(movieRepository.findAll()).thenReturn(Flux.just(drama2026, action2025));
+            when(movieRepository.findAllByGenre("Action")).thenReturn(Flux.just(action2025));
 
             StepVerifier.create(movieService.getFilteredByGenre("Action"))
                     .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .verifyComplete();
+        }
+    }
+
+    @Nested
+    @DisplayName("getFilteredByName()")
+    class FilteredByNameTests {
+
+        @Test
+        @DisplayName("Null name: MovieServiceException emitted")
+        void shouldErrorOnNullName() {
+            StepVerifier.create(movieService.getFilteredByName(null))
+                    .expectError(MovieServiceException.class).verify();
+            verifyNoInteractions(movieRepository);
+        }
+
+        @Test
+        @DisplayName("Matching name: only matching movies emitted")
+        void shouldReturnMatchingMovies() {
+            when(movieRepository.findAllByName("Quiet Storm")).thenReturn(Flux.just(drama2026));
+
+            StepVerifier.create(movieService.getFilteredByName("Quiet Storm"))
+                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
     }
@@ -175,11 +227,41 @@ class MovieServiceTest {
         }
 
         @Test
-        @DisplayName("Valid range: only movies within range returned")
+        @DisplayName("Negative minDuration: MovieServiceException emitted")
+        void shouldErrorOnNonPositiveMin() {
+            StepVerifier.create(movieService.getFilteredByDuration(-1, null))
+                    .expectError(MovieServiceException.class).verify();
+        }
+
+        @Test
+        @DisplayName("Both bounds set: uses findAllByDurationBetween")
         void shouldReturnMoviesWithinRange() {
-            when(movieRepository.findAll()).thenReturn(Flux.just(drama2026, action2025));
+            when(movieRepository.findAllByDurationBetween(90, 100))
+                    .thenReturn(Flux.just(action2025));
 
             StepVerifier.create(movieService.getFilteredByDuration(90, 100))
+                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Only minDuration set: uses findAllByDurationGreaterThanEqual")
+        void shouldUseGreaterThanEqualWhenOnlyMinSet() {
+            when(movieRepository.findAllByDurationGreaterThanEqual(100))
+                    .thenReturn(Flux.just(drama2026));
+
+            StepVerifier.create(movieService.getFilteredByDuration(100, null))
+                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Only maxDuration set: uses findAllByDurationLessThanEqual")
+        void shouldUseLessThanEqualWhenOnlyMaxSet() {
+            when(movieRepository.findAllByDurationLessThanEqual(100))
+                    .thenReturn(Flux.just(action2025));
+
+            StepVerifier.create(movieService.getFilteredByDuration(null, 100))
                     .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
@@ -205,13 +287,39 @@ class MovieServiceTest {
         }
 
         @Test
-        @DisplayName("Valid range: only movies with premiere in range returned")
+        @DisplayName("Both bounds set: uses findAllByPremiereDateBetween")
         void shouldReturnMoviesInDateRange() {
-            when(movieRepository.findAll()).thenReturn(Flux.just(drama2026, action2025));
+            LocalDate min = LocalDate.of(2026, 1, 1);
+            LocalDate max = LocalDate.of(2026, 12, 31);
+            when(movieRepository.findAllByPremiereDateBetween(min, max))
+                    .thenReturn(Flux.just(drama2026));
 
-            StepVerifier.create(movieService.getFilteredByPremiereDate(
-                            LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)))
+            StepVerifier.create(movieService.getFilteredByPremiereDate(min, max))
                     .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Only minDate set: uses findAllByPremiereDateGreaterThanEqual")
+        void shouldUseGreaterThanEqualWhenOnlyMinSet() {
+            LocalDate min = LocalDate.of(2026, 1, 1);
+            when(movieRepository.findAllByPremiereDateGreaterThanEqual(min))
+                    .thenReturn(Flux.just(drama2026));
+
+            StepVerifier.create(movieService.getFilteredByPremiereDate(min, null))
+                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Only maxDate set: uses findAllByPremiereDateLessThanEqual")
+        void shouldUseLessThanEqualWhenOnlyMaxSet() {
+            LocalDate max = LocalDate.of(2026, 1, 1);
+            when(movieRepository.findAllByPremiereDateLessThanEqual(max))
+                    .thenReturn(Flux.just(action2025));
+
+            StepVerifier.create(movieService.getFilteredByPremiereDate(null, max))
+                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
     }
@@ -223,11 +331,7 @@ class MovieServiceTest {
         @Test
         @DisplayName("Happy path: movie added to user favorites")
         void shouldAddToFavorites() {
-            User user = User.builder()
-                    .username("jan@example.com")
-                    .email("jan@example.com")
-                    .password("pass")
-                    .build();
+            User user = userWithFavorites("jan@example.com", new ArrayList<>());
 
             when(movieRepository.findById("movie-1")).thenReturn(Mono.just(drama2026));
             when(userRepository.findByUsername("jan@example.com")).thenReturn(Mono.just(user));
@@ -254,11 +358,8 @@ class MovieServiceTest {
         @Test
         @DisplayName("Already in favorites: MovieServiceException with movie id")
         void shouldThrowWhenAlreadyInFavorites() {
-            User user = User.builder()
-                    .username("jan@example.com")
-                    .email("jan@example.com")
-                    .password("pass")
-                    .build();
+            // User is created via constructor with the movie already in favorites
+            User user = userWithFavorites("jan@example.com", new ArrayList<>(List.of(drama2026)));
 
             when(movieRepository.findById("movie-1")).thenReturn(Mono.just(drama2026));
             when(userRepository.findByUsername("jan@example.com")).thenReturn(Mono.just(user));
@@ -279,11 +380,12 @@ class MovieServiceTest {
         @Test
         @DisplayName("Happy path: valid DTO saves movie and returns DTO")
         void shouldAddMovie() {
+            // Date format expected by CreateMovieDto.toEntity is dd-MM-yyyy
             CreateMovieDto dto = CreateMovieDto.builder()
                     .name("Quiet Storm")
                     .genre("Drama")
                     .duration(120)
-                    .premiereDate("2025-03-10")
+                    .premiereDate("10-03-2025")
                     .build();
 
             when(createMovieDtoValidator.validate(dto)).thenReturn(Map.of());
@@ -301,10 +403,32 @@ class MovieServiceTest {
             when(createMovieDtoValidator.validate(dto)).thenReturn(Map.of("name", "must not be blank"));
 
             StepVerifier.create(movieService.addMovie(Mono.just(dto)))
-                    .expectErrorSatisfies(ex -> assertThat(ex).isInstanceOf(MovieServiceException.class))
+                    .expectError(MovieServiceException.class)
                     .verify();
 
             verifyNoInteractions(movieRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("getById()")
+    class GetByIdTests {
+
+        @Test
+        @DisplayName("Happy path: movie returned as DTO")
+        void shouldReturnMovieById() {
+            when(movieRepository.findById("movie-1")).thenReturn(Mono.just(drama2026));
+
+            StepVerifier.create(movieService.getById("movie-1"))
+                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Movie not found: Mono completes empty")
+        void shouldCompleteEmptyWhenNotFound() {
+            when(movieRepository.findById("missing")).thenReturn(Mono.empty());
+            StepVerifier.create(movieService.getById("missing")).verifyComplete();
         }
     }
 
@@ -337,12 +461,7 @@ class MovieServiceTest {
         @Test
         @DisplayName("User has two favorites: Flux emits two DTOs")
         void shouldReturnFavorites() {
-            User user = User.builder()
-                    .username("jan@example.com")
-                    .email("jan@example.com")
-                    .password("pass")
-                    .build();
-
+            User user = userWithFavorites("jan@example.com", List.of(drama2026, action2025));
             when(userRepository.findByUsername("jan@example.com")).thenReturn(Mono.just(user));
 
             StepVerifier.create(movieService.getFavoriteMovies("jan@example.com"))

@@ -28,7 +28,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,11 +93,36 @@ class TicketOrderServiceTest {
     }
 
     @Test
-    @DisplayName("cancelOrder — throws synchronously when orderId is null")
-    void cancelOrder_whenOrderIdNull_shouldThrow() {
-        assertThatThrownBy(() -> ticketOrderService.cancelOrder("user", null))
-                .isInstanceOf(TicketOrderServiceException.class)
-                .hasMessageContaining("null");
+    @DisplayName("cancelOrder — emits Mono.error when orderId is null")
+    void cancelOrder_whenOrderIdNull_shouldEmitError() {
+        // Service returns Mono.error rather than throwing synchronously, so verify reactively.
+        StepVerifier.create(ticketOrderService.cancelOrder("user", null))
+                .expectErrorSatisfies(ex -> assertThat(ex)
+                        .isInstanceOf(TicketOrderServiceException.class)
+                        .hasMessageContaining("null"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("cancelOrder — emits error when order id is unknown")
+    void cancelOrder_whenOrderUnknown_shouldEmitError() {
+        when(ticketOrderRepository.findById("missing")).thenReturn(Mono.empty());
+
+        StepVerifier.create(ticketOrderService.cancelOrder("user", "missing"))
+                .expectErrorSatisfies(ex -> assertThat(ex)
+                        .isInstanceOf(TicketOrderServiceException.class)
+                        .hasMessageContaining("missing"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("cancelOrder — owner can cancel: status changes to CANCELLED")
+    void cancelOrder_whenOwnerCancels_shouldReturnCancelledOrder() {
+        when(ticketOrderRepository.findById("order-1")).thenReturn(Mono.just(sampleOrder));
+
+        StepVerifier.create(ticketOrderService.cancelOrder("test@example.com", "order-1"))
+                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("order-1"))
+                .verifyComplete();
     }
 
     @Test

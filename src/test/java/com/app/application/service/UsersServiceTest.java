@@ -100,15 +100,22 @@ class UsersServiceTest {
         }
 
         @Test
+        @DisplayName("Username already exists: RegistrationUserException with username")
         void shouldErrorWhenUsernameExists() {
+            // Service queries by the DTO username, not a hard-coded one.
             when(createUserDtoValidator.validate(validCreateDto)).thenReturn(Map.of());
-            when(userRepository.findByUsername("jankowalski"))
+            when(userRepository.findByUsername("jan@example.com"))
                     .thenReturn(Mono.just(userJan));
+            // Reactor evaluates the `.then(...)` chain eagerly to build the pipeline,
+            // so downstream stubs must return non-null Monos even though they aren't subscribed.
+            // Stubbed leniently because they may not be invoked depending on the early termination point.
+            org.mockito.Mockito.lenient().when(userRepository.findByEmail("jan@example.com")).thenReturn(Mono.empty());
+            org.mockito.Mockito.lenient().when(userRepository.addOrUpdate(any())).thenReturn(Mono.just(userJan));
 
             StepVerifier.create(usersService.register(validCreateDto))
                     .expectErrorSatisfies(ex -> {
                         assertThat(ex).isInstanceOf(RegistrationUserException.class);
-                        assertThat(ex.getMessage()).contains("jankowalski");
+                        assertThat(ex.getMessage()).contains("jan@example.com");
                     })
                     .verify();
         }
@@ -119,6 +126,9 @@ class UsersServiceTest {
             when(createUserDtoValidator.validate(validCreateDto)).thenReturn(Map.of());
             when(userRepository.findByUsername("jan@example.com")).thenReturn(Mono.empty());
             when(userRepository.findByEmail("jan@example.com")).thenReturn(Mono.just(userJan));
+            // The chain of Mono.then(...) evaluates createUser eagerly to build the pipeline,
+            // so addOrUpdate must return a non-null Mono even though it should never be subscribed.
+            org.mockito.Mockito.lenient().when(userRepository.addOrUpdate(any())).thenReturn(Mono.just(userJan));
 
             StepVerifier.create(usersService.register(validCreateDto))
                     .expectErrorSatisfies(ex -> {
