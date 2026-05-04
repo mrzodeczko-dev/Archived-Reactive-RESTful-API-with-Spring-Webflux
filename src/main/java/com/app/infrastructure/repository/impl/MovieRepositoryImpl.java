@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -62,5 +63,45 @@ public class MovieRepositoryImpl implements MovieRepository {
                 .flatMap(movies -> mongoMovieRepository.deleteAll(movies)
                         .then(Mono.just(movies)))
                 .flatMapMany(Flux::fromIterable);
+    }
+
+    @Override
+    public Flux<Movie> findAllByGenre(String genre) {
+        return mongoMovieRepository.findAllByGenre(genre);
+    }
+
+    @Override
+    public Flux<Movie> findAllByName(String name) {
+        return mongoMovieRepository.findAllByName(name);
+    }
+
+    @Override
+    public Flux<Movie> findAllByDurationBetween(int min, int max) {
+        return mongoMovieRepository.findAllByDurationBetween(min, max);
+    }
+
+    @Override
+    public Flux<Movie> findAllByDurationGreaterThanEqual(int min) {
+        return mongoMovieRepository.findAllByDurationGreaterThanEqual(min);
+    }
+
+    @Override
+    public Flux<Movie> findAllByDurationLessThanEqual(int max) {
+        return mongoMovieRepository.findAllByDurationLessThanEqual(max);
+    }
+
+    @Override
+    public Flux<Movie> findAllByPremiereDateBetween(LocalDate from, LocalDate to) {
+        return mongoMovieRepository.findAllByPremiereDateBetween(from, to);
+    }
+
+    @Override
+    public Flux<Movie> findAllByPremiereDateGreaterThanEqual(LocalDate from) {
+        return mongoMovieRepository.findAllByPremiereDateGreaterThanEqual(from);
+    }
+
+    @Override
+    public Flux<Movie> findAllByPremiereDateLessThanEqual(LocalDate to) {
+        return mongoMovieRepository.findAllByPremiereDateLessThanEqual(to);
     }
 }
