@@ -132,7 +132,7 @@ public class MoviesHandler {
             })
     })
     public Mono<ServerResponse> deleteMovieById(final ServerRequest serverRequest) {
-        return movieService.deleteMovieById(serverRequest.pathVariable(serverRequest.pathVariable("id")))
+        return movieService.deleteMovieById(serverRequest.pathVariable("id"))
                 .flatMap(movie -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)

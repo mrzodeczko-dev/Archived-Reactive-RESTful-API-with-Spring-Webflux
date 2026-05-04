@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -144,13 +145,11 @@ public class TicketPurchaseService {
         return cityRepository.findByName(cityName)
                 .switchIfEmpty(Mono.error(() -> new TicketPurchaseServiceException(
                         "No city with name %s".formatted(cityName))))
-                .flatMapMany(city -> Flux.fromIterable(
-                        city.getCinemas()
-                                .stream()
-                                .flatMap(cinema -> cinema.getCinemaHalls().stream())
-                                .map(CinemaHall::getId)
-                                .collect(Collectors.toSet())))
-                .collectList()
+                .map(city -> (Set<String>) city.getCinemas()
+                        .stream()
+                        .flatMap(cinema -> cinema.getCinemaHalls().stream())
+                        .map(CinemaHall::getId)
+                        .collect(Collectors.toSet()))
                 .flatMapMany(cinemaHallIds -> ticketPurchases
                         .filter(tp -> cinemaHallIds.contains(tp.getMovieEmission().getCinemaHallId())))
                 .map(TicketPurchase::toDto);
