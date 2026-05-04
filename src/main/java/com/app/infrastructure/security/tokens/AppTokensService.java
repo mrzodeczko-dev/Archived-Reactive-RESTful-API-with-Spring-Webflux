@@ -81,7 +81,7 @@ public class AppTokensService {
     }
 
     public String getId(String token) {
-        return claims(token.substring(7)).getSubject();
+        return claims(token).getSubject();
     }
 
     private Date getExpiration(String token) {
@@ -89,7 +89,6 @@ public class AppTokensService {
     }
 
     public boolean isTokenValid(String token) {
-        Date expirationDate = getExpiration(token.substring(7));
-        return expirationDate.after(new Date());
+        return getExpiration(token).after(new Date());
     }
 }
