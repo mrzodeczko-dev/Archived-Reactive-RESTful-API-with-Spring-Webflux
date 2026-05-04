@@ -179,7 +179,7 @@ public class MovieService {
 
         return resourceMono
                 .flatMapMany(resource ->
-                        Mono.using(
+                        Flux.using(
                                 () -> new BufferedReader(new InputStreamReader(resource.getInputStream())),
                                 bufferedReader -> Mono.fromCallable(() -> collectMoviesToAddFromCsvFile(bufferedReader, errorsList))
                                         .subscribeOn(Schedulers.boundedElastic())
