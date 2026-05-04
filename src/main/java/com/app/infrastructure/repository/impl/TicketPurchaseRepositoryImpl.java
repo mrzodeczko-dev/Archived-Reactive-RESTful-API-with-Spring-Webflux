@@ -4,9 +4,6 @@ import com.app.domain.ticket_purchase.TicketPurchase;
 import com.app.domain.ticket_purchase.TicketPurchaseRepository;
 import com.app.infrastructure.repository.mongo.MongoTicketPurchaseRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,7 +16,6 @@ import java.util.List;
 public class TicketPurchaseRepositoryImpl implements TicketPurchaseRepository {
 
     private final MongoTicketPurchaseRepository mongoTicketPurchaseRepository;
-    private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     @Override
     public Mono<TicketPurchase> addOrUpdate(TicketPurchase item) {
@@ -76,7 +72,10 @@ public class TicketPurchaseRepositoryImpl implements TicketPurchaseRepository {
 
     @Override
     public Flux<TicketPurchase> findAllByCinemaHallsIdsAndUsername(List<String> cinemaHallsIds, String username) {
-        return mongoTicketPurchaseRepository.findAllByMovieEmissionCinemaHallIdAndUserUsername(cinemaHallsIds, username);
+        // Fixed: was passing List<String> to a derived method expecting scalar String.
+        // Now uses explicit @Query method with correct $in operator.
+        return mongoTicketPurchaseRepository
+                .findAllByMovieEmissionCinemaHallIdInAndUserUsername(cinemaHallsIds, username);
     }
 
     @Override
@@ -110,18 +109,12 @@ public class TicketPurchaseRepositoryImpl implements TicketPurchaseRepository {
     }
 
     @Override
-    public Flux<TicketPurchase> findAllByMovieEmissionInDateAndByCinemaHallsIdIn(LocalDate beforeDate, List<String> cinemaHallIds) {
-
-        return reactiveMongoTemplate
-                .find(new Query(Criteria
-                        .where("movieEmission")
-                        .elemMatch(Criteria
-                                .where("startDateTime")
-                                .lt(LocalDate.now().atTime(0, 0)))
-                        .elemMatch(Criteria
-                                .where("cinemaHallsId")
-                                .in(cinemaHallIds)
-                        )), TicketPurchase.class);
+    public Flux<TicketPurchase> findAllByMovieEmissionInDateAndByCinemaHallsIdIn(
+            LocalDate beforeDate, List<String> cinemaHallIds) {
+        // Fixed: movieEmission is an embedded object, not an array — $elemMatch is incorrect.
+        // Use dot-notation query with $lt on startDateTime and $in on cinemaHallId.
+        return mongoTicketPurchaseRepository
+                .findAllByMovieEmissionStartDateTimeBeforeAndMovieEmissionCinemaHallIdIn(
+                        beforeDate.atTime(0, 0), cinemaHallIds);
     }
-
 }

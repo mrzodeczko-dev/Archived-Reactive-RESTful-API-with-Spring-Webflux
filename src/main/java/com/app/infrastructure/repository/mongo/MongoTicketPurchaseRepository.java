@@ -14,7 +14,10 @@ public interface MongoTicketPurchaseRepository extends ReactiveMongoRepository<T
 
     Flux<TicketPurchase> findAllByMovieEmissionCinemaHallIdIn(List<String> cinemaHallsIds);
 
-    Flux<TicketPurchase> findAllByMovieEmissionCinemaHallIdAndUserUsername(List<String> cinemaHallsIds, String username);
+    // Fixed: first param must be a single String matched with $in via @Query,
+    // because Spring Data derives 'CinemaHallId' as scalar String, not List.
+    @Query("{ 'movieEmission.cinemaHallId': { $in: ?0 }, 'user.username': ?1 }")
+    Flux<TicketPurchase> findAllByMovieEmissionCinemaHallIdInAndUserUsername(List<String> cinemaHallsIds, String username);
 
     Flux<TicketPurchase> findAllByPurchaseDateBetween(LocalDate from, LocalDate to);
 
@@ -28,9 +31,9 @@ public interface MongoTicketPurchaseRepository extends ReactiveMongoRepository<T
 
     Flux<TicketPurchase> findAllByMovieEmissionCinemaHallId(String cinemaHallId);
 
-//    @Query(value = "{'cinemaHalls':{$elemMatch: {'id': ?0}}}")
-    @Query("{'movieEmission':{$elemMatch: {'startDateTime': }} }")
-
-    Flux<TicketPurchase> findAllByMovieEmission_StartDateTimeAndByMovieEmissionCinemaHallId();
-
+    // Fixed: movieEmission is an embedded object (not array), so $elemMatch is wrong.
+    // Correct query uses dot-notation on the embedded fields directly.
+    @Query("{ 'movieEmission.cinemaHallId': { $in: ?1 }, 'movieEmission.startDateTime': { $lt: ?0 } }")
+    Flux<TicketPurchase> findAllByMovieEmissionStartDateTimeBeforeAndMovieEmissionCinemaHallIdIn(
+            java.time.LocalDateTime beforeDateTime, List<String> cinemaHallIds);
 }

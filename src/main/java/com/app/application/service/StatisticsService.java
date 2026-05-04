@@ -27,8 +27,6 @@ public class StatisticsService {
     private final CityRepository cityRepository;
     private final MovieRepository movieRepository;
 
-    // --- helpers -----------------------------------------------------------
-
     private List<String> cinemaHallIdsForCity(com.app.domain.city.City city) {
         return city.getCinemas()
                 .stream()
@@ -36,23 +34,19 @@ public class StatisticsService {
                 .collect(Collectors.toList());
     }
 
-    // -----------------------------------------------------------------------
-
     public Flux<CityFrequencyDto> findCitiesFrequency() {
         final var currentDate = LocalDate.now();
 
         return cityRepository.findAll()
-                .flatMap(city -> {
-                    var hallIds = cinemaHallIdsForCity(city);
-                    // single batch query per city — no per-cinema/per-hall round-trips
-                    return ticketPurchaseRepository
-                            .findAllByMovieEmissionInDateAndByCinemaHallsIdIn(currentDate, hallIds)
-                            .map(tp -> tp.getTickets().size())
-                            .map(ticketsNumber -> CityFrequencyDto.builder()
-                                    .city(city.getName())
-                                    .frequency(ticketsNumber)
-                                    .build());
-                });
+                .flatMap(city -> ticketPurchaseRepository
+                        .findAllByMovieEmissionInDateAndByCinemaHallsIdIn(
+                                currentDate,
+                                cinemaHallIdsForCity(city))
+                        .map(ticketPurchase -> ticketPurchase.getTickets().size())
+                        .map(ticketsNumber -> CityFrequencyDto.builder()
+                                .city(city.getName())
+                                .frequency(ticketsNumber)
+                                .build()));
     }
 
     public Flux<CityFrequencyDto> findCitiesWithMostFrequency() {
@@ -89,46 +83,38 @@ public class StatisticsService {
         return cityRepository.findByName(cityName)
                 .switchIfEmpty(Mono.error(() -> new StatisticsServiceException(
                         "No city with name: %s".formatted(cityName))))
-                .flatMapMany(city -> {
-                    var hallIds = cinemaHallIdsForCity(city);
-                    // one batch query instead of city→cinema→hall→emission→purchase chain
-                    return ticketPurchaseRepository
-                            .findAllByCinemaHallsIds(hallIds)
-                            .collectMultimap(
-                                    tp -> tp.getMovieEmission().getMovie().getGenre(),
-                                    tp -> tp.getTickets().size())
-                            .map(this::reduceMultiMapToMapWithMaxElementOf)
-                            .flatMapMany(maxByGenre -> Flux.fromIterable(
-                                    maxByGenre.entrySet().stream()
-                                            .map(e -> MovieFrequencyByGenreDto.builder()
-                                                    .genre(e.getKey())
-                                                    .frequency(e.getValue())
-                                                    .build())
-                                            .collect(Collectors.toList())));
-                });
+                .flatMapMany(city -> ticketPurchaseRepository
+                        .findAllByCinemaHallsIds(cinemaHallIdsForCity(city))
+                        .collectMultimap(
+                                tp -> tp.getMovieEmission().getMovie().getGenre(),
+                                tp -> tp.getTickets().size())
+                        .map(this::reduceMultiMapToMapWithMaxElementOf)
+                        .flatMapMany(maxByGenre -> Flux.fromIterable(
+                                maxByGenre.entrySet().stream()
+                                        .map(e -> MovieFrequencyByGenreDto.builder()
+                                                .genre(e.getKey())
+                                                .frequency(e.getValue())
+                                                .build())
+                                        .collect(Collectors.toList()))));
     }
 
     public Flux<MostPopularMovieGroupedByCityDto> findMostPopularMovieGroupedByCity() {
         return cityRepository.findAll()
-                .flatMap(city -> {
-                    var hallIds = cinemaHallIdsForCity(city);
-                    // one batch query per city instead of city→cinema→hall→emission→purchase chain
-                    return ticketPurchaseRepository
-                            .findAllByCinemaHallsIds(hallIds)
-                            .collectMultimap(
-                                    tp -> tp.getMovieEmission().getMovie(),
-                                    tp -> tp.getTickets().size())
-                            .map(this::reduceMultiMapToMapWithMaxElementOf)
-                            .map(maxByMovie -> MostPopularMovieGroupedByCityDto.builder()
-                                    .city(city.getName())
-                                    .movieFrequency(maxByMovie.entrySet().stream()
-                                            .map(e -> MovieFrequencyDto.builder()
-                                                    .movie(e.getKey().toDto())
-                                                    .frequency(e.getValue())
-                                                    .build())
-                                            .toList())
-                                    .build());
-                });
+                .flatMap(city -> ticketPurchaseRepository
+                        .findAllByCinemaHallsIds(cinemaHallIdsForCity(city))
+                        .collectMultimap(
+                                tp -> tp.getMovieEmission().getMovie(),
+                                tp -> tp.getTickets().size())
+                        .map(this::reduceMultiMapToMapWithMaxElementOf)
+                        .map(maxByMovie -> MostPopularMovieGroupedByCityDto.builder()
+                                .city(city.getName())
+                                .movieFrequency(maxByMovie.entrySet().stream()
+                                        .map(e -> MovieFrequencyDto.builder()
+                                                .movie(e.getKey().toDto())
+                                                .frequency(e.getValue())
+                                                .build())
+                                        .toList())
+                                .build()));
     }
 
     private <T> Map<T, Integer> reduceMultiMapToMapWithMaxElementOf(Map<T, Collection<Integer>> multiMap) {
