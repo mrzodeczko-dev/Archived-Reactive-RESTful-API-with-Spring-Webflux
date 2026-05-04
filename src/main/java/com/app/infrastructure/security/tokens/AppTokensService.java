@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -39,7 +40,7 @@ public class AppTokensService {
 
         return userRepository
                 .findByUsername(user.getUsername())
-                .flatMap(userFromDb -> {
+                .flatMap(userFromDb -> Mono.fromCallable(() -> {
                     var id = userFromDb.getId();
                     var createdDate = new Date();
                     var accessTokenExpirationTimeMillis = System.currentTimeMillis() + accessTokenExpirationTimeInMs;
@@ -63,12 +64,12 @@ public class AppTokensService {
                             .claim(refreshTokenAccessTokenKey, accessTokenExpirationTimeMillis)
                             .compact();
 
-                    return Mono.just(TokensDto
+                    return TokensDto
                             .builder()
                             .accessToken(accessToken)
                             .refreshToken(refreshToken)
-                            .build());
-                });
+                            .build();
+                }).subscribeOn(Schedulers.boundedElastic()));
     }
 
     private Claims claims(String token) {

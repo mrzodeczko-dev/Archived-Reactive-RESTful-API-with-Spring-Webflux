@@ -22,6 +22,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import static java.util.Objects.isNull;
 
@@ -56,7 +57,11 @@ public class LoginHandler {
                 })
                 .flatMap(authenticationDto -> appUserDetailsService
                         .findByUsername(authenticationDto.getUsername())
-                        .filter(user -> passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword())))
+                        .flatMap(user -> Mono
+                                .fromCallable(() -> passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword()))
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .filter(Boolean::booleanValue)
+                                .map(matched -> user)))
                 .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide valid credentials")))
                 .flatMap(appTokensService::generateTokens)
                 .flatMap(tokensDto -> ServerResponse
