@@ -24,11 +24,12 @@
 4. [Tech Stack](#tech-stack)
 5. [Prerequisites](#prerequisites)
 6. [Quick Start](#quick-start)
-7. [Architecture](#architecture)
-8. [MongoDB Replica Set](#mongodb-replica-set)
-9. [Docker Commands](#docker-commands)
-10. [OpenAPI / Swagger UI](#openapi--swagger-ui)
-11. [Why Reactive?](#why-reactive)
+7. [OpenAPI / Swagger UI](#openapi--swagger-ui)
+8. [Architecture](#architecture)
+9. [MongoDB Replica Set](#mongodb-replica-set)
+10. [Docker Commands](#docker-commands)
+11. [Non-Blocking Integrations](#non-blocking-integrations)
+12. [Why Reactive?](#why-reactive)
 
 ---
 
@@ -121,21 +122,26 @@ erDiagram
 |---|:---:|:---:|:---:|
 | `POST /register` | ✅ | | |
 | `POST /login` | ✅ | | |
-| `GET /cities/**` | ✅ | | |
 | `GET /statistics/**` | ✅ | | |
+| `/emails/**` | | ✅ | |
+| `GET /cities/**` | | ✅ | |
 | `GET /cinemas` | | ✅ | |
-| `GET /movies/**` | | ✅ | ✅ |
-| `GET /tickets/**` | | ✅ | |
-| `GET /ticketOrders/**` | | ✅ | |
+| `/movies/**` | | ✅ | ✅ |
+| `/tickets/**` | | ✅ | |
+| `/ticketOrders/**` | | ✅ | |
+| `/ticketsOrders/**` | | ✅ | |
+| `/ticketPurchases/**` | | ✅ | |
+| `/movieEmissions/**` | | ✅ | ✅ |
+| `/users/**` | | | ✅ |
+| `/cinemas/**` | | | ✅ |
+| `/admin/ticketPurchases/**` | | | ✅ |
 | `POST /movies/csv` (bulk import) | | | ✅ |
 | `POST /movieEmissions` | | | ✅ |
-| `POST/PUT/DELETE /cinemas/**` | | | ✅ |
-| `GET/POST/PUT/DELETE /users/**` | ✅ | | |
 
 **Summary:**
-- **Public** — registration, login, city browsing, statistics, Swagger docs
-- **USER** — browsing cinemas and movies, managing own tickets and orders
-- **ADMIN** — managing cinemas, importing movies via CSV, creating screenings
+- **Public** — registration, login, statistics, Swagger docs
+- **USER** — browsing cinemas and movies, managing own tickets, orders, and purchases, sending emails
+- **ADMIN** — managing users and cinemas, importing movies via CSV, creating screenings, viewing all purchases
 
 ---
 
@@ -209,7 +215,16 @@ mvn clean package -DskipTests
 docker-compose up -d --build
 ```
 
-Swagger UI available at: [http://localhost:8080/docs](http://localhost:8080/docs)
+---
+
+[↑ Back to top](#table-of-contents)
+
+## OpenAPI / Swagger UI
+
+Interactive API documentation is available at:
+http://localhost:8080/docs
+
+text
 
 ---
 
@@ -303,13 +318,12 @@ docker stack rm <appName>
 
 [↑ Back to top](#table-of-contents)
 
-## OpenAPI / Swagger UI
+## Non-Blocking Integrations
 
-Interactive API documentation is available at:
+Two features rely on inherently blocking third-party APIs and are integrated without blocking the event loop:
 
-```
-http://localhost:8080/docs
-```
+- **Email sending** — `JavaMailSender` calls are offloaded to Reactor's bounded elastic scheduler. A retry policy (up to 2 attempts with exponential back-off) handles transient SMTP failures; authentication errors are excluded from retries.
+- **CSV movie import** — OpenCSV file I/O is wrapped and submitted to the bounded elastic scheduler. Each row is validated and checked for uniqueness against MongoDB before writing. If any row fails, the entire import is rejected atomically — no partial saves occur.
 
 ---
 
