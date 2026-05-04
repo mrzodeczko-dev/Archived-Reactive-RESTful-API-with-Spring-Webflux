@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -35,18 +34,14 @@ public class StatisticsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> getCinemaFrequencyByCityForAllCities(final ServerRequest serverRequest) {
-
         return statisticsService.findCitiesFrequency()
-                .collectList()
-                .flatMap(list -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list))
+                        .body(flux, CityFrequencyDto.class)
                 );
-
     }
 
     @Loggable
@@ -58,18 +53,14 @@ public class StatisticsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> getCityWithMaxFrequency(final ServerRequest serverRequest) {
-
         return statisticsService.findCitiesWithMostFrequency()
-                .collectList()
-                .flatMap(list -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list))
+                        .body(flux, CityFrequencyDto.class)
                 );
-
     }
 
     @Loggable
@@ -81,16 +72,13 @@ public class StatisticsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> findMostPopularMovieGroupedByCity(final ServerRequest serverRequest) {
-
         return statisticsService.findMostPopularMovieGroupedByCity()
-                .collectList()
-                .flatMap(list -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list))
+                        .body(flux, MostPopularMovieGroupedByCityDto.class)
                 );
     }
 
@@ -103,19 +91,15 @@ public class StatisticsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> findAllMoviesFrequency(final ServerRequest serverRequest) {
-
         return statisticsService.findAllMoviesFrequency()
-                .collectList()
-                .flatMap(list -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list))
+                        .body(flux, MovieFrequencyDto.class)
                 );
     }
-
 
     @Loggable
     @Operation(summary = "GET most popular movies gruped by genre in city", parameters = @Parameter(name = "city", in = ParameterIn.PATH, description = "city name"))
@@ -126,19 +110,15 @@ public class StatisticsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> findMostPopularMoviesGroupedByGenreInCity(final ServerRequest serverRequest) {
-
         return statisticsService.findMostPopularMoviesGroupedByGenreInCity(serverRequest.pathVariable("city"))
-                .collectList()
-                .flatMap(list -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list))
+                        .body(flux, MovieFrequencyDto.class)
                 );
     }
-
 
     @Loggable
     @Operation(summary = "GET average ticket price grouped by city")
@@ -149,18 +129,13 @@ public class StatisticsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
-
     })
     public Mono<ServerResponse> getAverageTicketPriceGroupedByCity(final ServerRequest serverRequest) {
-
         return statisticsService.getAverageTicketPriceGroupedByCity()
-                .collectList()
-                .flatMap(list -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list))
+                        .body(flux, AverageTicketPriceByCityDto.class)
                 );
-
     }
-
 }

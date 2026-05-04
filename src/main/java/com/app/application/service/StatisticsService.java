@@ -153,13 +153,12 @@ public class StatisticsService {
                         .findAllByCinemaHallsIds(city.getCinemas().stream()
                                 .flatMap(cinema -> cinema.getCinemaHalls().stream().map(CinemaHall::getId))
                                 .collect(Collectors.toList()))
-                        .collectMap(
-                                ticketPurchase -> city,
-                                ticketPurchase -> averageTicketPrice(ticketPurchase.getTickets())))
-                .map(entry -> AverageTicketPriceByCityDto.builder()
-                        .city(entry.keySet().iterator().next().getName())
-                        .averageTicketPrice(entry.values().iterator().next())
-                        .build());
+                        .flatMap(tp -> Flux.fromIterable(tp.getTickets()))
+                        .collectList()
+                        .map(tickets -> AverageTicketPriceByCityDto.builder()
+                                .city(city.getName())
+                                .averageTicketPrice(averageTicketPrice(tickets))
+                                .build()));
     }
 
     private BigDecimal averageTicketPrice(List<Ticket> tickets) {

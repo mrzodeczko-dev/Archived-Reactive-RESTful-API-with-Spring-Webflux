@@ -56,11 +56,10 @@ public class CinemaService {
                         cityRepository.findByName(createCinemaDto.getCity())
                                 .switchIfEmpty(Mono.error(() -> new CinemaServiceException(
                                         "No city with name: %s".formatted(createCinemaDto.getCity()))))
-                                .flatMap(city -> cinemaHallRepository
-                                        .addOrUpdateMany(cinema.getCinemaHalls())
-                                        .then(cityRepository.addOrUpdate(city.addCinema(cinema)))
-                                        .then(cinemaRepository.addOrUpdate(
-                                                cinema.setCity(city.getName()).setCinemasIdForCinemaHalls(cinema.getId())))))
+                                .flatMap(city -> cinemaRepository
+                                        .addOrUpdate(cinema.setCity(city.getName()).setCinemasIdForCinemaHalls(cinema.getId()))
+                                        .flatMap(savedCinema -> cityRepository.addOrUpdate(city.addCinema(savedCinema))
+                                                .thenReturn(savedCinema))))
                 .map(Cinema::toDto)
                 .as(transactionalOperator::transactional);
     }

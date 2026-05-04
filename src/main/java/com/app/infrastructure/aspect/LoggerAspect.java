@@ -46,6 +46,6 @@ public class LoggerAspect {
                     });
         }
 
-        return Mono.empty();
+        return result;
     }
 }

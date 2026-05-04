@@ -21,15 +21,13 @@ public class AppRouting {
             @RouterOperation(path = "/register", beanClass = UsersHandler.class, beanMethod = "register"),
             @RouterOperation(path = "/users", beanClass = UsersHandler.class, beanMethod = "getAllUsers"),
             @RouterOperation(path = "/users/username/{username}", beanClass = UsersHandler.class, beanMethod = "getByUsername"),
-            @RouterOperation(path = "/users/promoteToAdmin/username/{username}", beanClass = UsersHandler.class, beanMethod = "promoteUserToAdminRole"),
-            @RouterOperation(path = "/users/test", beanClass = UsersHandler.class, beanMethod = "promoteUserToAdminRole")
+            @RouterOperation(path = "/users/promoteToAdmin/username/{username}", beanClass = UsersHandler.class, beanMethod = "promoteUserToAdminRole")
     })
     public RouterFunction<ServerResponse> usersRoute(UsersHandler usersHandler) {
         return route(POST("/register").and(accept(MediaType.APPLICATION_JSON)), usersHandler::register)
                 .andRoute(GET("/users").and(accept(MediaType.APPLICATION_JSON)), usersHandler::getAllUsers)
                 .andRoute(GET("/users/username/{username}").and(accept(MediaType.APPLICATION_JSON)), usersHandler::getByUsername)
                 .andRoute(POST("/users/promoteToAdmin/username/{username}").and(accept(MediaType.APPLICATION_JSON)), usersHandler::promoteUserToAdminRole);
-
     }
 
     @Bean
@@ -54,7 +52,7 @@ public class AppRouting {
     @RouterOperations({
             @RouterOperation(path = "/cinemaHalls", beanClass = CinemaHallsHandler.class, beanMethod = "getAll"),
             @RouterOperation(path = "/cinemaHalls/cinemaId/{cinemaId}", beanClass = CinemaHallsHandler.class, beanMethod = "getAllForCinema"),
-            @RouterOperation(path = "/cinemaHalls/addToCinema/cinemaId/{cinemaId}", beanClass = CinemaHallsHandler.class, beanMethod = "addCinemaHallToCinema"),
+            @RouterOperation(path = "/cinemaHalls/addToCinema/cinemaId/{cinemaId}", beanClass = CinemaHallsHandler.class, beanMethod = "addCinemaHallToCinema")
     })
     public RouterFunction<ServerResponse> cinemaHallsRoute(CinemaHallsHandler cinemaHallsHandler) {
         return route(POST("/cinemaHalls/addToCinema/cinemaId/{cinemaId}").and(accept(MediaType.APPLICATION_JSON)), cinemaHallsHandler::addCinemaHallToCinema)
@@ -108,7 +106,7 @@ public class AppRouting {
             @RouterOperation(method = RequestMethod.POST, path = "/cinemas", beanClass = CinemasHandler.class, beanMethod = "addCinema"),
             @RouterOperation(method = RequestMethod.GET, path = "/cinemas", beanClass = CinemasHandler.class, beanMethod = "getAll"),
             @RouterOperation(method = RequestMethod.GET, path = "/cinemas/city/{cityId}", beanClass = CinemasHandler.class, beanMethod = "getAllCinemasByCity"),
-            @RouterOperation(method = RequestMethod.PUT, path = "/cinemas/id/{id}/addCinemaHall", beanClass = CinemasHandler.class, beanMethod = "addCinemaHall"),
+            @RouterOperation(method = RequestMethod.PUT, path = "/cinemas/id/{id}/addCinemaHall", beanClass = CinemasHandler.class, beanMethod = "addCinemaHall")
     })
     @Bean
     public RouterFunction<ServerResponse> cinemasRouting(CinemasHandler cinemasHandler) {
@@ -116,7 +114,6 @@ public class AppRouting {
                 .andRoute(GET("/cinemas").and(accept(MediaType.APPLICATION_JSON)), cinemasHandler::getAll)
                 .andRoute(GET("/cinemas/city/{city}").and(accept(MediaType.APPLICATION_JSON)), cinemasHandler::getAllCinemasByCity)
                 .andRoute(PUT("/cinemas/id/{id}/addCinemaHall").and(accept(MediaType.APPLICATION_JSON)), cinemasHandler::addCinemaHall);
-
     }
 
     @RouterOperations({
@@ -181,8 +178,6 @@ public class AppRouting {
             @RouterOperation(method = RequestMethod.GET, path = "/admin/ticketPurchases/movieId/{movieId}", beanClass = TicketPurchaseHandler.class, beanMethod = "getAllTicketPurchasesWithMovieId"),
             @RouterOperation(method = RequestMethod.GET, path = "/ticketPurchases/movieId/{movieId}", beanClass = TicketPurchaseHandler.class, beanMethod = "getAllTicketPurchasesWithMovieIdForLoggedUser"),
             @RouterOperation(method = RequestMethod.GET, path = "/admin/ticketPurchases/cinemaHallId/{cinemaHallId}", beanClass = TicketPurchaseHandler.class, beanMethod = "getAllTicketPurchasesByCinemaHallId")
-
-
     })
     public RouterFunction<ServerResponse> ticketPurchasesRouting(TicketPurchaseHandler ticketPurchaseHandler) {
         return route(POST("/ticketPurchases/ticketOrderId/{ticketOrderId}").and(accept(MediaType.APPLICATION_JSON)), ticketPurchaseHandler::purchaseTicketFromOrder)
@@ -197,6 +192,5 @@ public class AppRouting {
                 .andRoute(GET("/admin/ticketPurchases/movieId/{movieId}").and(accept(MediaType.APPLICATION_JSON)), ticketPurchaseHandler::getAllTicketPurchasesWithMovieId)
                 .andRoute(GET("/ticketPurchases/movieId/{movieId}").and(accept(MediaType.APPLICATION_JSON)), ticketPurchaseHandler::getAllTicketPurchasesWithMovieIdForLoggedUser)
                 .andRoute(GET("/admin/ticketPurchases/cinemaHallId/{cinemaHallId}").and(accept(MediaType.APPLICATION_JSON)), ticketPurchaseHandler::getAllTicketPurchasesByCinemaHallId);
-
     }
 }

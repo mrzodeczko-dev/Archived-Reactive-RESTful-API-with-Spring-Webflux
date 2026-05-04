@@ -7,6 +7,20 @@ spring:
       uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/?replicaSet=rs0
       database: cinema_db
 
+  mail:
+    host: smtp.gmail.com
+    username: firelight.code@gmail.com
+    password: ${MAIL_PASSWORD}
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+adminpassword: password@1
+
 
 jwt:
   token:

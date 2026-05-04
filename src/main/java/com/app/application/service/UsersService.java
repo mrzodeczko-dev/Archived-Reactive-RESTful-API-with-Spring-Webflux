@@ -33,7 +33,6 @@ public class UsersService {
     private final TransactionalOperator transactionalOperator;
 
     public Mono<UserDto> register(final CreateUserDto createUserDto) {
-
         var errors = createUserDtoValidator.validate(createUserDto);
 
         if (Validations.hasErrors(errors)) {
@@ -45,11 +44,6 @@ public class UsersService {
                 .then(createUser(createUserDto).map(User::toDto));
     }
 
-    /**
-     * Returns Mono.error if the given field value already exists in the repository.
-     * The nonNull guard inside flatMap was removed — values emitted by flatMap are
-     * always non-null by the Reactive Streams specification.
-     */
     private Mono<?> returnMonoErrorIfExists(Function<String, Mono<User>> function, UserField userField, String arg) {
         return function.apply(arg)
                 .flatMap(user -> Mono.<Void>error(
@@ -94,6 +88,6 @@ public class UsersService {
     private Admin promoteUserToAdmin(User user) {
         return Optional.ofNullable(user)
                 .map(userVal -> new Admin(user.getUsername(), userVal.getPassword()))
-                .orElse(null);
+                .orElseThrow(() -> new UserServiceException("User cannot be null during promotion"));
     }
 }

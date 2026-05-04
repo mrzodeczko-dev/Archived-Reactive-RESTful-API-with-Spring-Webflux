@@ -43,14 +43,16 @@ public class CinemaHallsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
+
     })
     public Mono<ServerResponse> addCinemaHallToCinema(ServerRequest serverRequest) {
+
         return cinemaHallService
                 .addCinemaHallToCinema(serverRequest.bodyToMono(AddCinemaHallToCinemaDto.class))
-                .flatMap(cinemaHallDto -> ServerResponse
-                        .status(HttpStatus.CREATED)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(cinemaHallDto)));
+                .flatMap(cinemaHallDto -> ServerResponse.status(HttpStatus.CREATED)
+                        .body(BodyInserters.fromValue(cinemaHallDto))
+                );
+
     }
 
     @Loggable
@@ -65,15 +67,19 @@ public class CinemaHallsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
+
     })
     public Mono<ServerResponse> getAllForCinema(ServerRequest serverRequest) {
+
         return cinemaHallService
                 .getAllForCinema(serverRequest.pathVariable("cinemaId"))
                 .collectList()
                 .flatMap(list -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list)));
+                        .body(BodyInserters.fromValue(list))
+                );
+
     }
 
     @Loggable
@@ -87,14 +93,18 @@ public class CinemaHallsHandler {
             @ApiResponse(responseCode = "500", description = "Error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
+
     })
     public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
+
         return cinemaHallService
                 .getAll()
                 .collectList()
                 .flatMap(list -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(list)));
+                        .body(BodyInserters.fromValue(list))
+                );
+
     }
 }

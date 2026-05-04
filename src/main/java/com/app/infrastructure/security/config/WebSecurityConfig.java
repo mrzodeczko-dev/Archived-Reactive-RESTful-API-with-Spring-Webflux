@@ -110,6 +110,7 @@ public class WebSecurityConfig {
                 .pathMatchers("/login").permitAll()
 
                 .pathMatchers("/users/**").hasRole("ADMIN")
+                .pathMatchers("/emails/**").hasRole("USER")
                 .pathMatchers("/statistics/**").permitAll()
 
                 .pathMatchers(HttpMethod.GET, "/cinemas").hasRole("USER")
@@ -120,7 +121,12 @@ public class WebSecurityConfig {
                 .pathMatchers("/movies/**").hasAnyRole("USER", "ADMIN")
                 .pathMatchers("/tickets/**").hasRole("USER")
                 .pathMatchers("/ticketOrders/**").hasRole("USER")
+                .pathMatchers("/ticketsOrders/**").hasRole("USER")
                 .pathMatchers(HttpMethod.POST, "/movieEmissions").hasRole("ADMIN")
+                .pathMatchers("/movieEmissions/**").hasAnyRole("USER", "ADMIN")
+
+                .pathMatchers("/admin/ticketPurchases/**").hasRole("ADMIN")
+                .pathMatchers("/ticketPurchases/**").hasRole("USER")
 
                 .pathMatchers("/docs/**").permitAll()
                 .pathMatchers("/v3/api-docs/**").permitAll()

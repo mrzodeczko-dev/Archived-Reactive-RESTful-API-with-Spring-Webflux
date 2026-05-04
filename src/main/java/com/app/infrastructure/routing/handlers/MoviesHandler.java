@@ -24,8 +24,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class MoviesHandler {
@@ -94,7 +92,8 @@ public class MoviesHandler {
                 .flatMap(movie -> ServerResponse
                         .status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(movie)));
+                        .body(BodyInserters.fromValue(movie))
+                );
     }
 
     @Loggable
@@ -115,7 +114,8 @@ public class MoviesHandler {
                 .flatMap(addedMovieList -> ServerResponse
                         .status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(addedMovieList)));
+                        .body(BodyInserters.fromValue(addedMovieList))
+                );
     }
 
     @Loggable
@@ -136,7 +136,8 @@ public class MoviesHandler {
                 .flatMap(movie -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(movie)));
+                        .body(BodyInserters.fromValue(movie))
+                );
     }
 
     @Loggable
@@ -153,11 +154,11 @@ public class MoviesHandler {
     })
     public Mono<ServerResponse> getAllMovies(ServerRequest serverRequest) {
         return movieService.getAll()
-                .collectList()
-                .flatMap(movies -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(movies)));
+                        .body(flux, MovieDto.class)
+                );
     }
 
     @Loggable
@@ -175,13 +176,11 @@ public class MoviesHandler {
     })
     public Mono<ServerResponse> getMoviesFilteredByPremiereDate(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(MovieFilteredByPremiereDate.class)
-                .switchIfEmpty(Mono.error(() -> new MovieServiceException("Request body is empty")))
-                .flatMap(dto -> movieService.getFilteredByPremiereDate(dto.getDateFrom(), dto.getDateTo())
-                        .collectList()
-                        .flatMap(movies -> ServerResponse
-                                .status(HttpStatus.OK)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .body(BodyInserters.fromValue(movies))));
+                .flatMap(dto -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(movieService.getFilteredByPremiereDate(dto.getDateFrom(), dto.getDateTo()), MovieDto.class)
+                );
     }
 
     @Loggable
@@ -199,13 +198,11 @@ public class MoviesHandler {
     })
     public Mono<ServerResponse> getMoviesFilteredByDuration(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(MovieFilteredByDuration.class)
-                .switchIfEmpty(Mono.error(() -> new MovieServiceException("Request body is empty")))
-                .flatMap(dto -> movieService.getFilteredByDuration(dto.getMinDuration(), dto.getMaxDuration())
-                        .collectList()
-                        .flatMap(movies -> ServerResponse
-                                .status(HttpStatus.OK)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .body(BodyInserters.fromValue(movies))));
+                .flatMap(dto -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(movieService.getFilteredByDuration(dto.getMinDuration(), dto.getMaxDuration()), MovieDto.class)
+                );
     }
 
     @Loggable
@@ -223,11 +220,11 @@ public class MoviesHandler {
     })
     public Mono<ServerResponse> getMoviesFilteredByName(ServerRequest serverRequest) {
         return movieService.getFilteredByName(serverRequest.pathVariable("name"))
-                .collectList()
-                .flatMap(movies -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(movies)));
+                        .body(flux, MovieDto.class)
+                );
     }
 
     @Loggable
@@ -245,11 +242,11 @@ public class MoviesHandler {
     })
     public Mono<ServerResponse> getMoviesFilteredByGenre(ServerRequest serverRequest) {
         return movieService.getFilteredByGenre(serverRequest.pathVariable("genre"))
-                .collectList()
-                .flatMap(movies -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(movies)));
+                        .body(flux, MovieDto.class)
+                );
     }
 
     @Loggable
@@ -267,11 +264,11 @@ public class MoviesHandler {
     })
     public Mono<ServerResponse> getMoviesFilteredByKeyword(ServerRequest serverRequest) {
         return movieService.getFilteredByKeyword(serverRequest.pathVariable("keyword"))
-                .collectList()
-                .flatMap(movies -> ServerResponse
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(movies)));
+                        .body(flux, MovieDto.class)
+                );
     }
 
     @Loggable
@@ -288,12 +285,11 @@ public class MoviesHandler {
     })
     public Mono<ServerResponse> getFavoriteMovies(ServerRequest serverRequest) {
         return serverRequest.principal()
-                .flatMap(principal -> movieService
-                        .getFavoriteMovies(principal.getName())
-                        .collectList())
-                .flatMap(movieList -> ServerResponse
+                .flatMapMany(principal -> movieService.getFavoriteMovies(principal.getName()))
+                .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(movieList)));
+                        .body(flux, MovieDto.class)
+                );
     }
 }

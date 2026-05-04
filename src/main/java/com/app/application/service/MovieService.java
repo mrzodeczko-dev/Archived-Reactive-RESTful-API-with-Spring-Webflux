@@ -12,11 +12,11 @@ import com.app.domain.security.UserRepository;
 import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,55 +43,36 @@ public class MovieService {
     private final CreateMovieDtoValidator createMovieDtoValidator;
 
     public Flux<MovieDto> getAll() {
-
         return movieRepository.findAll()
                 .filter(Objects::nonNull)
                 .map(Movie::toDto);
     }
 
     public Flux<MovieDto> getFilteredByKeyword(final String keyWord) {
-
         if (isNull(keyWord)) {
             return Flux.error(() -> new MovieServiceException("Key word is null"));
         }
-
-        return movieRepository.findAll()
-                .filter(Objects::nonNull)
-                .filter(movie ->
-                        keyWord.equalsIgnoreCase(movie.getGenre()) ||
-                                keyWord.equalsIgnoreCase(movie.getName()) ||
-                                keyWord.equalsIgnoreCase(movie.getPremiereDate().toString()) ||
-                                keyWord.equalsIgnoreCase(String.valueOf(movie.getDuration())))
-                .map(Movie::toDto);
-
+        return Flux.merge(
+                movieRepository.findAllByName(keyWord),
+                movieRepository.findAllByGenre(keyWord)
+        ).distinct(Movie::getId).map(Movie::toDto);
     }
 
     public Flux<MovieDto> getFilteredByGenre(final String genre) {
-
         if (isNull(genre)) {
             return Flux.error(() -> new MovieServiceException("Genre is null"));
         }
-
-        return movieRepository.findAll()
-                .filter(Objects::nonNull)
-                .filter(movie -> genre.equals(movie.getGenre()))
-                .map(Movie::toDto);
+        return movieRepository.findAllByGenre(genre).map(Movie::toDto);
     }
 
     public Flux<MovieDto> getFilteredByName(final String name) {
-
         if (isNull(name)) {
             return Flux.error(() -> new MovieServiceException("Name is null"));
         }
-
-        return movieRepository.findAll()
-                .filter(Objects::nonNull)
-                .filter(movie -> name.equals(movie.getName()))
-                .map(Movie::toDto);
+        return movieRepository.findAllByName(name).map(Movie::toDto);
     }
 
     public Flux<MovieDto> getFilteredByDuration(final Integer minDuration, final Integer maxDuration) {
-
         var isMinDurationNull = isNull(minDuration);
         var isMaxDurationNull = isNull(maxDuration);
 
@@ -111,42 +92,41 @@ public class MovieService {
                             """));
         }
 
-        return movieRepository.findAll()
-                .filter(Objects::nonNull)
-                .filter(movie -> nonNull(movie.getDuration()) &&
-                        (!isMinDurationNull && movie.getDuration() >= minDuration) &&
-                        (!isMaxDurationNull && movie.getDuration() <= maxDuration))
-                .map(Movie::toDto);
-
+        if (!isMinDurationNull && !isMaxDurationNull) {
+            return movieRepository.findAllByDurationBetween(minDuration, maxDuration).map(Movie::toDto);
+        }
+        if (!isMinDurationNull) {
+            return movieRepository.findAllByDurationGreaterThanEqual(minDuration).map(Movie::toDto);
+        }
+        return movieRepository.findAllByDurationLessThanEqual(maxDuration).map(Movie::toDto);
     }
 
     public Flux<MovieDto> getFilteredByPremiereDate(final LocalDate minDate, final LocalDate maxDate) {
-
         var isMinDateNull = isNull(minDate);
         var isMaxDateNull = isNull(maxDate);
 
-        if ((isMinDateNull && isMaxDateNull) || (!isMinDateNull && !isMaxDateNull && minDate.compareTo(maxDate) > 0)
-        ) {
+        if ((isMinDateNull && isMaxDateNull) || (!isMinDateNull && !isMaxDateNull && minDate.compareTo(maxDate) > 0)) {
             return Flux.error(() -> new MovieServiceException("At least one boundary date should be defined"));
         }
 
-        return movieRepository.findAll()
-                .filter(Objects::nonNull)
-                .filter(movie -> (!isMinDateNull && movie.getPremiereDate().compareTo(minDate) >= 0) &&
-                        (!isMaxDateNull && movie.getPremiereDate().compareTo(maxDate) <= 0))
-                .map(Movie::toDto);
+        if (!isMinDateNull && !isMaxDateNull) {
+            return movieRepository.findAllByPremiereDateBetween(minDate, maxDate).map(Movie::toDto);
+        }
+        if (!isMinDateNull) {
+            return movieRepository.findAllByPremiereDateGreaterThanEqual(minDate).map(Movie::toDto);
+        }
+        return movieRepository.findAllByPremiereDateLessThanEqual(maxDate).map(Movie::toDto);
     }
 
     public Mono<MovieDto> addMovieToFavorites(final String movieId, final String username) {
-
         return movieRepository.findById(movieId)
                 .switchIfEmpty(Mono.error(() -> new MovieServiceException("No movie with id: %s".formatted(movieId))))
                 .flatMap(movie -> userRepository.findByUsername(username)
-                        .map(user -> {
+                        .flatMap(user -> {
                             if (nonNull(user.getFavoriteMovies()) && user.getFavoriteMovies().stream().map(Movie::getId).anyMatch(id -> id.equals(movieId))) {
-                                throw new MovieServiceException("Movie with id: %s is already in favorites movies".formatted(movieId));
+                                return Mono.error(new MovieServiceException("Movie with id: %s is already in favorites movies".formatted(movieId)));
                             }
-                            return user.addMovieToFavorites(movie);
+                            return Mono.just(user.addMovieToFavorites(movie));
                         })
                         .flatMap(userRepository::addOrUpdate)
                         .then(Mono.just(movie.toDto()))
@@ -166,7 +146,6 @@ public class MovieService {
     }
 
     public Mono<MovieDto> addMovie(final Mono<CreateMovieDto> createMovieDto) {
-
         return createMovieDto
                 .map(dto -> {
                     var errors = createMovieDtoValidator.validate(dto);
@@ -180,9 +159,7 @@ public class MovieService {
                 .map(Movie::toDto);
     }
 
-
     private Mono<Movie> doMovieExistsInDb(Movie movie, List<String> errorsList, AtomicInteger counter) {
-
         return movieRepository.findByNameAndGenre(movie.getName(), movie.getGenre())
                 .filter(Objects::nonNull)
                 .hasElement()
@@ -197,13 +174,14 @@ public class MovieService {
     }
 
     public Flux<MovieDto> uploadCSVFile(final Mono<Resource> resourceMono) {
-
         var errorsList = new ArrayList<String>();
         var counter = new AtomicInteger(1);
 
         return resourceMono
-                .map(this::convertResourceToBufferedReader)
-                .map(bufferedReader -> collectMoviesToAddFromCsvFile(bufferedReader, errorsList))
+                .flatMap(resource -> Mono.fromCallable(() -> convertResourceToBufferedReader(resource))
+                        .subscribeOn(Schedulers.boundedElastic()))
+                .flatMap(bufferedReader -> Mono.fromCallable(() -> collectMoviesToAddFromCsvFile(bufferedReader, errorsList))
+                        .subscribeOn(Schedulers.boundedElastic()))
                 .flatMapIterable(Function.identity())
                 .flatMap(movie -> doMovieExistsInDb(movie, errorsList, counter))
                 .collectList()
@@ -255,9 +233,7 @@ public class MovieService {
     }
 
     public Mono<MovieDto> deleteMovieById(final String id) {
-
         return movieRepository.deleteById(id)
                 .map(Movie::toDto);
     }
-
 }

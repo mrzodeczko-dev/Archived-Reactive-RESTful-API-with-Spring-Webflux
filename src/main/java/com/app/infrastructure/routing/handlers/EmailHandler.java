@@ -1,9 +1,6 @@
 package com.app.infrastructure.routing.handlers;
 
-import com.app.application.dto.CreateMailDto;
-import com.app.application.dto.CreateMailsDto;
-import com.app.application.dto.MailDto;
-import com.app.application.dto.ResponseErrorDto;
+import com.app.application.dto.*;
 import com.app.application.exception.EmailServiceException;
 import com.app.application.service.EmailService;
 import com.app.infrastructure.aspect.annotations.Loggable;
@@ -55,7 +52,7 @@ public class EmailHandler {
                         ServerResponse
                                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(ResponseErrorDto.builder().message(e.getMessage()).build()));
+                                .bodyValue(ResponseErrorDto.builder().error(ErrorMessageDto.builder().message(e.getMessage()).build()).build()));
     }
 
     @Loggable
@@ -84,6 +81,6 @@ public class EmailHandler {
                         ServerResponse
                                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(ResponseErrorDto.builder().message(e.getMessage()).build()));
+                                .bodyValue(ResponseErrorDto.builder().error(ErrorMessageDto.builder().message(e.getMessage()).build())));
     }
 }
