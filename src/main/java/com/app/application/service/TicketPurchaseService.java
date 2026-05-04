@@ -11,6 +11,7 @@ import com.app.domain.cinema_hall.CinemaHall;
 import com.app.domain.cinema_hall.CinemaHallRepository;
 import com.app.domain.city.CityRepository;
 import com.app.domain.movie.MovieRepository;
+import com.app.domain.movie_emission.MovieEmission;
 import com.app.domain.movie_emission.MovieEmissionRepository;
 import com.app.domain.security.UserRepository;
 import com.app.domain.ticket.Ticket;
@@ -20,6 +21,8 @@ import com.app.domain.ticket_order.TicketOrder;
 import com.app.domain.ticket_order.TicketOrderRepository;
 import com.app.domain.ticket_purchase.TicketPurchase;
 import com.app.domain.ticket_purchase.TicketPurchaseRepository;
+import com.app.domain.vo.Discount;
+import com.app.domain.vo.Money;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.GenericValidator;
@@ -80,13 +83,19 @@ public class TicketPurchaseService {
                         .movieEmission(movieEmission)
                         .tickets(createPurchaseDto.getTicketsDetails()
                                 .stream()
-                                .map(ticketDetailsDto -> Ticket.builder()
-                                        .position(ticketDetailsDto.getPosition())
-                                        .type(ticketDetailsDto.getIndividualTicketType())
-                                        .ticketStatus(TicketStatus.PURCHASED)
-                                        .discount(createPurchaseDto.getBaseDiscount()
-                                                .add(ticketDetailsDto.getIndividualTicketType().getDiscount()))
-                                        .build())
+                                .map(ticketDetailsDto -> {
+                                    Discount totalDiscount = createPurchaseDto.getBaseDiscount()
+                                            .add(ticketDetailsDto.getIndividualTicketType().getDiscount());
+                                    Money ticketPrice = computeTicketPrice(
+                                            movieEmission.getBaseTicketPrice(), totalDiscount);
+                                    return Ticket.builder()
+                                            .position(ticketDetailsDto.getPosition())
+                                            .type(ticketDetailsDto.getIndividualTicketType())
+                                            .ticketStatus(TicketStatus.PURCHASED)
+                                            .discount(totalDiscount)
+                                            .price(ticketPrice)
+                                            .build();
+                                })
                                 .collect(Collectors.toList()))
                         .build()))
                 .flatMap(ticketPurchase ->
@@ -94,6 +103,14 @@ public class TicketPurchaseService {
                                 .then(ticketPurchaseRepository.addOrUpdate(ticketPurchase))
                                 .map(TicketPurchase::toDto))
                 .as(transactionalOperator::transactional);
+    }
+
+    /**
+     * Computes the final ticket price by applying the total discount to the base ticket price.
+     * Formula: finalPrice = basePrice * (1 - totalDiscount)
+     */
+    private Money computeTicketPrice(Money baseTicketPrice, Discount totalDiscount) {
+        return baseTicketPrice.multiply(totalDiscount.inverse().getValue().toPlainString());
     }
 
     public Mono<TicketPurchaseDto> purchaseTicketFromOrder(String username, String ticketOrderId) {
