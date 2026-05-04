@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -203,7 +202,7 @@ class CinemaServiceTest {
 
             when(cinemaRepository.findById("cinema-1")).thenReturn(Mono.just(emptyCinema));
             when(cinemaHallRepository.addOrUpdate(any())).thenReturn(Mono.just(newHall));
-            when(cinemaRepository.addOrUpdate(any())).thenReturn(Mono.just(updatedCinema)); // <-- klucz
+            when(cinemaRepository.addOrUpdate(any())).thenReturn(Mono.just(updatedCinema));
             when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cinemaService.addCinemaHallToCinema("cinema-1", dto))
@@ -212,12 +211,18 @@ class CinemaServiceTest {
         }
 
         @Test
-        @DisplayName("Validation error: rowNo=0 throws synchronous CinemaServiceException")
-        void shouldThrowSynchronouslyOnValidationError() {
+        @DisplayName("Validation error: rowNo=0 emits CinemaServiceException in Mono")
+        void shouldEmitValidationErrorOnInvalidDto() {
             CreateCinemaHallDto dto = CreateCinemaHallDto.builder().rowNo(0).colNo(4).build();
 
-            assertThatThrownBy(() -> cinemaService.addCinemaHallToCinema("cinema-1", dto))
-                    .isInstanceOf(CinemaServiceException.class);
+            StepVerifier.create(cinemaService.addCinemaHallToCinema("cinema-1", dto))
+                    .expectErrorSatisfies(ex -> {
+                        assertThat(ex).isInstanceOf(CinemaServiceException.class);
+                        assertThat(ex.getMessage()).contains("CreateCinemaHallDto is not valid");
+                    })
+                    .verify();
+
+            verifyNoInteractions(cinemaRepository, cinemaHallRepository);
         }
 
         @Test
