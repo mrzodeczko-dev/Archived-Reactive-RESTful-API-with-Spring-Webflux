@@ -29,7 +29,8 @@
 9. [MongoDB Replica Set](#mongodb-replica-set)
 10. [Docker Commands](#docker-commands)
 11. [Non-Blocking Integrations](#non-blocking-integrations)
-12. [Why Reactive?](#why-reactive)
+12. [Tests](#tests)
+13. [Why Reactive?](#why-reactive)
 
 ---
 
@@ -329,6 +330,20 @@ Every code path that touches an inherently blocking or CPU-bound API is wrapped 
 - **Reactive MongoDB** — all persistence operations use the reactive driver natively, so no offload is required.
 
 ---
+
+## Tests
+
+Unit tests cover all application services and run in under 5 seconds without any external dependencies (MongoDB, SMTP, etc.) — collaborators are mocked with Mockito and reactive flows are asserted using `StepVerifier` from `reactor-test`.
+
+```bash
+mvn test
+```
+
+**Coverage:** 120 tests across 10 service test classes (`CinemaServiceTest`, `CinemaHallServiceTest`, `CityServiceTest`, `EmailServiceTest`, `MovieEmissionServiceTest`, `MovieServiceTest`, `StatisticsServiceTest`, `TicketOrderServiceTest`, `TicketPurchaseServiceTest`, `UsersServiceTest`).
+
+---
+
+[↑ Back to top](#table-of-contents)
 
 [↑ Back to top](#table-of-contents)
 
