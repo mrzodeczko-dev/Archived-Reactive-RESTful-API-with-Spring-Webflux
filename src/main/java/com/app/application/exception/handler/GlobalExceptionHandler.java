@@ -1,22 +1,21 @@
 package com.app.application.exception.handler;
 
 import com.app.application.dto.ErrorMessageDto;
-import com.app.application.dto.ResponseDto;
 import com.app.application.dto.ResponseErrorDto;
 import com.app.application.exception.HandledException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.boot.webflux.error.ErrorWebExceptionHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @Order(-2)
@@ -29,7 +28,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
 
     @Override
-    public Mono<Void> handle(ServerWebExchange serverWebExchange, Throwable throwable) {
+    public Mono<Void> handle(ServerWebExchange serverWebExchange, @NonNull Throwable throwable) {
 
         serverWebExchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
         serverWebExchange.getResponse().setRawStatusCode(500);
@@ -50,7 +49,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
                         .wrap(objectMapper.writeValueAsBytes(ResponseErrorDto.builder()
                                 .error(ErrorMessageDto.builder().message(ex.getMessage()).build())
                                 .build()));
-            } catch (JsonProcessingException exception) {
+            } catch (JacksonException exception) {
                 return dataBufferFactory.wrap(new byte[]{});
             }
         }

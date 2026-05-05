@@ -4,9 +4,6 @@ import com.app.application.dto.ErrorMessageDto;
 import com.app.application.dto.ResponseDto;
 import com.app.infrastructure.security.AuthenticationManager;
 import com.app.infrastructure.security.SecurityContextRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -22,8 +19,8 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
 import reactor.core.publisher.Mono;
-
-import javax.crypto.SecretKey;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -52,7 +49,7 @@ public class WebSecurityConfig {
                                                         .message(e.getMessage())
                                                         .build())
                                                 .build()))));
-            } catch (JsonProcessingException exception) {
+            } catch (JacksonException exception) {
                 log.error(exception.getMessage(), exception);
             }
             return serverWebExchange
@@ -79,7 +76,7 @@ public class WebSecurityConfig {
                                                                     .formatted(e.getMessage(), principal.getName()))
                                                             .build())
                                                     .build()));
-                                } catch (JsonProcessingException exception) {
+                                } catch (JacksonException exception) {
                                     log.error(exception.getMessage(), exception);
                                 }
                                 return dataBufferFactory.wrap(new byte[]{});

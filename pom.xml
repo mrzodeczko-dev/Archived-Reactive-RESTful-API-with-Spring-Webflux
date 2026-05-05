@@ -30,7 +30,6 @@
     </properties>
 
     <dependencies>
-        <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -42,7 +41,6 @@
             </exclusions>
         </dependency>
 
-        <!-- MongoDB reactive -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
@@ -66,7 +64,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Mail -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
@@ -78,26 +75,12 @@
             </exclusions>
         </dependency>
 
-        <!-- Logging -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
-        <!--
-            Jackson 3 — Spring Boot 4 ships with Jackson 3 by default (group: tools.jackson).
-            spring-boot-starter-webflux already pulls in jackson-databind transitively.
-            Explicit declarations below are needed only for jackson-dataformat-yaml
-            which is not included by default.
 
-            NOTE: If you still need Jackson 2 compatibility (e.g. third-party libs),
-            add the spring-boot-jackson2 bridge (deprecated, will be removed in a future release):
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-jackson2</artifactId>
-            </dependency>
-        -->
         <dependency>
             <groupId>tools.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>

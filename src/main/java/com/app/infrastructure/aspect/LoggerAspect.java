@@ -30,7 +30,7 @@ public class LoggerAspect {
                     .doOnSuccess(o -> {
                         if (Objects.nonNull(o) && o instanceof ServerResponse resp) {
                             log.info("Invoking method: {}", Arrays.toString(joinPoint.getArgs()));
-                            log.info("Response code: {}", resp.rawStatusCode());
+                            log.info("Response code: {}", resp.statusCode().value());
                             log.info("Execution time: {} ms", System.currentTimeMillis() - startTime.get());
                         }
                     });
@@ -45,7 +45,6 @@ public class LoggerAspect {
                         log.info("Execution time: {} ms", System.currentTimeMillis() - startTime.get());
                     });
         }
-
         return result;
     }
 }
