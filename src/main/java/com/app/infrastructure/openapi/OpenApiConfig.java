@@ -13,7 +13,6 @@ import java.util.Map;
 @Configuration
 public class OpenApiConfig {
 
-
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
@@ -30,8 +29,8 @@ public class OpenApiConfig {
                         .version("1.0")
                         .contact(new Contact()
                                 .email("firelight.code@gmail.com")
-                                .name("CoderNoOne")
-                                .url("http://www.github.com/CoderNoOne")
+                                .name("mrzodeczko-dev")
+                                .url("http://www.github.com/mrzodeczko-dev")
                         )
                 );
     }

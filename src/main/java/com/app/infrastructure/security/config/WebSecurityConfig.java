@@ -6,6 +6,7 @@ import com.app.infrastructure.security.AuthenticationManager;
 import com.app.infrastructure.security.SecurityContextRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -17,12 +18,12 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
 import reactor.core.publisher.Mono;
+
+import javax.crypto.SecretKey;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -35,11 +36,6 @@ public class WebSecurityConfig {
     private final ObjectMapper objectMapper;
     private final SecurityContextRepository securityContextRepository;
     private final DataBufferFactory dataBufferFactory;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
 
     @Bean
     public ServerAuthenticationEntryPoint serverAuthenticationEntryPoint() {
@@ -131,7 +127,11 @@ public class WebSecurityConfig {
                         .pathMatchers("/ticketPurchases/**").hasRole("USER")
 
                         .pathMatchers("/docs/**").permitAll()
+                        .pathMatchers("/docs").permitAll()
+                        .pathMatchers("/swagger-ui/**").permitAll()
+                        .pathMatchers("/swagger-ui.html").permitAll()
                         .pathMatchers("/v3/api-docs/**").permitAll()
+                        .pathMatchers("/v3/api-docs").permitAll()
                         .pathMatchers("/webjars/swagger-ui/**").permitAll()
 
                         .anyExchange().denyAll()

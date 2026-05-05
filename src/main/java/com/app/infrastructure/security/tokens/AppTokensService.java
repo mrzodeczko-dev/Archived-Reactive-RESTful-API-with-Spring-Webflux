@@ -49,17 +49,17 @@ public class AppTokensService {
 
                     var accessToken = Jwts
                             .builder()
-                            .setSubject(String.valueOf(id))
-                            .setExpiration(accessTokenExpirationTime)
-                            .setIssuedAt(createdDate)
+                            .subject(String.valueOf(id))
+                            .expiration(accessTokenExpirationTime)
+                            .issuedAt(createdDate)
                             .signWith(secretKey)
                             .compact();
 
                     var refreshToken = Jwts
                             .builder()
-                            .setSubject(String.valueOf(id))
-                            .setExpiration(refreshTokenExpirationTime)
-                            .setIssuedAt(createdDate)
+                            .subject(String.valueOf(id))
+                            .expiration(refreshTokenExpirationTime)
+                            .issuedAt(createdDate)
                             .signWith(secretKey)
                             .claim(refreshTokenAccessTokenKey, accessTokenExpirationTimeMillis)
                             .compact();
@@ -74,11 +74,11 @@ public class AppTokensService {
 
     private Claims claims(String token) {
         return Jwts
-                .parserBuilder()
-                .setSigningKey(secretKey)
+                .parser()
+                .verifyWith(secretKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public String getId(String token) {

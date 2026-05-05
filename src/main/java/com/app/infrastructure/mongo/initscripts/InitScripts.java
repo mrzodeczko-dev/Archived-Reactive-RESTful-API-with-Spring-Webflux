@@ -3,16 +3,17 @@ package com.app.infrastructure.mongo.initscripts;
 import com.app.domain.security.Admin;
 import com.app.domain.security.AdminRepository;
 import com.app.infrastructure.mongo.initscripts.subscriber.AdminSubscriber;
-import io.changock.migration.api.annotations.ChangeLog;
-import io.changock.migration.api.annotations.ChangeSet;
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@ChangeLog(order = "1")
+@ChangeUnit(id = "createAdmin", order = "001", author = "CoderNoOne")
 @Slf4j
 public class InitScripts {
 
-    @ChangeSet(order = "001", id = "createAdmin", author = "CoderNoOne")
+    @Execution
     public void createAdmin(AdminRepository adminRepository, InitParams initParams, PasswordEncoder passwordEncoder) {
 
         log.info("Executing script for adding default admin user");
@@ -20,6 +21,11 @@ public class InitScripts {
         adminRepository
                 .addOrUpdate(new Admin(initParams.getAdminUsername(), passwordEncoder.encode(initParams.getPassword())))
                 .subscribeWith(new AdminSubscriber());
+    }
+
+    @RollbackExecution
+    public void rollback() {
+        log.info("Rollback script for removing default admin user");
     }
 
 }

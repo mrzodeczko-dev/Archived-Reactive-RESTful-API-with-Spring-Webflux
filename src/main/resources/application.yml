@@ -19,6 +19,7 @@ spring:
           starttls:
             enable: true
 
+adminusername: admin123
 adminpassword: password@1
 
 
@@ -38,6 +39,8 @@ springdoc:
   packages-to-scan: com.app
   swagger-ui:
     path: /docs
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+mongock:
+  migration-scan-package: com.app.infrastructure.mongo.initscripts
 
-change-logs-scan-package: com.app.infrastructure.mongo.initscripts
-adminusername: admin123
