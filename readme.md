@@ -35,6 +35,7 @@
 11. [Non-Blocking Integrations](#non-blocking-integrations)
 12. [Tests](#tests)
 13. [Why Reactive?](#why-reactive)
+14. [Migration History](#migration-history)
 
 ---
 
@@ -158,10 +159,10 @@ erDiagram
 
 | Layer | Technology | Version |
 |---|---|---|
-| Framework | Spring Boot | 2.4.4 |
+| Framework | Spring Boot | 3.5.13 |
 | Reactive web | Spring WebFlux + Netty | via Boot |
 | Reactive runtime | Project Reactor | via Boot |
-| Java | Eclipse Temurin | 17 |
+| Java | Eclipse Temurin | 21 |
 
 ### Persistence
 
@@ -170,22 +171,21 @@ erDiagram
 | Database | MongoDB | 4.4.4 |
 | Reactive driver | spring-boot-starter-data-mongodb-reactive | via Boot |
 | Sync driver | mongodb-driver-sync | via Boot |
-| DB migrations | Mongock | 4.2.8.BETA |
+| DB migrations | Mongock | 5.4.4 |
 
 ### Security & Auth
 
 | Layer | Technology | Version |
 |---|---|---|
 | Security | Spring Security (WebFlux) | via Boot |
-| JWT | JJWT (api / impl / jackson) | 0.11.2 |
+| JWT | JJWT (api / impl / jackson) | 0.12.6 |
 
 ### Observability & Tooling
 
 | Layer | Technology | Version |
 |---|---|---|
 | Logging | Log4j2 (spring-boot-starter-log4j2) | via Boot |
-| API docs | springdoc-openapi WebFlux UI | 1.5.2 |
-| Blocking detector | BlockHound | 1.0.6.RELEASE |
+| API docs | springdoc-openapi WebFlux UI | 2.8.13 |
 | Code generation | Lombok | 1.18.34 |
 
 ### Infrastructure
@@ -204,7 +204,7 @@ erDiagram
 ## Prerequisites
 
 - **Docker** and **Docker Compose** (Docker Swarm mode enabled for swarm deployment)
-- **Java 17** + **Maven 3.8+** (for local build)
+- **Java 21** + **Maven 3.8+** (for local build)
 
 ---
 
@@ -244,7 +244,7 @@ block-beta
   columns 1
   A["🔄  CLASSES — changes each build"]
   B["📦  DEPENDENCIES — cached layer"]
-  C["☕  JRE  eclipse-temurin:17"]
+  C["☕  JRE  eclipse-temurin:21"]
 
   style A fill:#4f98a3,color:#fff,stroke:#1a626b
   style B fill:#2d6a6e,color:#fff,stroke:#1a626b
@@ -373,3 +373,22 @@ Java 21 introduced **Virtual Threads** (Project Loom, JEP 444) as a production-r
 ---
 
 [↑ Back to top](#table-of-contents)
+
+---
+
+## Migration History
+
+### Phase 1 — Java 17 → Java 21 (Spring Boot 2.x baseline)
+
+The first phase kept the project on Spring Boot 2.x and only bumped the JDK from 17 to 21. The changes were minimal: the `maven-compiler-plugin` target was updated to Java 21, the base Docker image was switched to `eclipse-temurin:21`, and the `java.version` property in `pom.xml` was updated accordingly. No source code changes were required since the project did not use any APIs removed between Java 17 and 21.
+
+### Phase 2 — Spring Boot 2.4.4 → Spring Boot 3.5.13 (Java 21)
+
+The second phase was a full Spring Boot 3 migration. Spring Boot 3 requires Java 17 as a minimum and ships with the Jakarta EE 9 namespace, which meant a significant number of changes across the codebase:
+
+- **`javax.*` → `jakarta.*`** — all Jakarta EE imports (e.g. `javax.mail.*`, `javax.crypto.*` where applicable) were renamed to `jakarta.*`. This was the most widespread change, touching mail configuration and security-related classes.
+- **Spring Security 6** — `WebSecurityConfigurerAdapter` was removed in Spring Security 6. The security configuration was rewritten using `SecurityWebFilterChain` bean with the lambda DSL. A circular dependency between `WebSecurityConfig`, `AuthenticationManager`, and `AppTokensService` (caused by `PasswordEncoder` being defined in the security config) was resolved by moving `PasswordEncoder` to a dedicated `PasswordEncoderConfig` class.
+- **Mongock 4.x → 5.x** — Mongock 4 (`mongock-spring-v5` + `mongodb-springdata-v3-driver`) was internally dependent on `javax.*` and incompatible with Spring Boot 3. The migration involved replacing the BOM and driver with `io.mongock:mongock-springboot-v3` and `io.mongock:mongodb-reactive-driver`, switching to the `@EnableMongock` auto-configuration, and replacing the `@ChangeLog` / `@ChangeSet` annotations with the new `@ChangeUnit` / `@Execution` / `@RollbackExecution` model.
+- **JJWT 0.11.x → 0.12.6** — the entire JJWT builder and parser API was deprecated in 0.11 and removed in 0.12. All builder calls were updated to the new fluent API (`subject()`, `expiration()`, `issuedAt()` instead of `setSubject()` etc.), `parserBuilder()` was replaced with `parser()`, `parseClaimsJws()` with `parseSignedClaims()`, and `getBody()` with `getPayload()`. The `SecretKey` bean was updated from `Keys.secretKeyFor(SignatureAlgorithm.HS512)` to `Jwts.SIG.HS512.key().build()`.
+- **MongoDB custom converter** — `PositionMapToBSONObjectConverter` was returning `org.bson.BSONObject` which is no longer recognised as a store-supported type in Spring Data MongoDB 4.x. The converter was updated to return `org.bson.Document` instead.
+- **springdoc-openapi 1.x → 2.8.13** — the dependency was replaced with `springdoc-openapi-starter-webflux-ui` and `springdoc-openapi-starter-webflux-api`. The Swagger UI security permit-list in `WebSecurityConfig` was expanded to cover the new default paths (`/swagger-ui/**`, `/swagger-ui.html`, `/v3/api-docs`) used by springdoc 2.x, and `config-url` / `url` properties were added to `application.yml` to correctly wire the UI to the API spec.
