@@ -4,11 +4,11 @@ services:
     container_name: mongo1
     hostname: mongo1
     restart: unless-stopped
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30001"]
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30001" ]
     volumes:
       - ./data/mongo-1:/data/db
     ports:
-      - "30001:30001"
+      - "${MONGO1_PORT}:${MONGO1_PORT}"
     networks:
       - net
 
@@ -17,11 +17,11 @@ services:
     container_name: mongo2
     hostname: mongo2
     restart: unless-stopped
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30002"]
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30002" ]
     volumes:
       - ./data/mongo-2:/data/db
     ports:
-      - "30002:30002"
+      - "${MONGO2_PORT}:${MONGO2_PORT}"
     networks:
       - net
 
@@ -30,11 +30,11 @@ services:
     container_name: mongo3
     hostname: mongo3
     restart: unless-stopped
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30003"]
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30003" ]
     volumes:
       - ./data/mongo-3:/data/db
     ports:
-      - "30003:30003"
+      - "${MONGO3_PORT}:${MONGO3_PORT}"
     networks:
       - net
 
@@ -95,7 +95,10 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     networks:
       - net
 
