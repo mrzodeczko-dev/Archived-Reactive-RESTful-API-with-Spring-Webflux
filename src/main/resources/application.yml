@@ -2,21 +2,20 @@ server:
   port: 8080
 
 spring:
-  mongodb:
-    uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/?replicaSet=rs0
-    database: cinema_db
+    mongodb:
+      uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/cinema_db?replicaSet=rs0
 
-  mail:
-    host: smtp.gmail.com
-    username: firelight.code@gmail.com
-    password: ${MAIL_PASSWORD}
-    port: 587
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+    mail:
+      host: smtp.gmail.com
+      username: firelight.code@gmail.com
+      password: ${MAIL_PASSWORD}
+      port: 587
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: true
 
 adminusername: admin123
 adminpassword: password@1
