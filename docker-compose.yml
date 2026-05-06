@@ -87,7 +87,13 @@ services:
       context: ./
       dockerfile: Dockerfile
     container_name: app
-    restart: on-failure
+    restart: on-failure:5
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     depends_on:
       mongo-init:
         condition: service_completed_successfully
