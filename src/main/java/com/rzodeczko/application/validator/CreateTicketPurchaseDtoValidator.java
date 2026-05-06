@@ -10,7 +10,6 @@ public class CreateTicketPurchaseDtoValidator implements Validator<CreateTicketP
 
     @Override
     public Map<String, String> validate(CreateTicketPurchaseDto item) {
-
         return TicketBaseValidationUtils.validate(item);
     }
 
