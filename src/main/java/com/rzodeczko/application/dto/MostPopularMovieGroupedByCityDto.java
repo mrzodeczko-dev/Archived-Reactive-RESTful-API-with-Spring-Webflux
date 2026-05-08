@@ -1,18 +1,31 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Data
-public class MostPopularMovieGroupedByCityDto {
+public record MostPopularMovieGroupedByCityDto(
+        String city,
+        List<MovieFrequencyDto> movieFrequency
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    private String city;
-    private List<MovieFrequencyDto> movieFrequency;
+    public static class Builder {
+        private String city;
+        private List<MovieFrequencyDto> movieFrequency;
+
+        public Builder city(String city) {
+            this.city = city;
+            return this;
+        }
+
+        public Builder movieFrequency(List<MovieFrequencyDto> movieFrequency) {
+            this.movieFrequency = movieFrequency;
+            return this;
+        }
+
+        public MostPopularMovieGroupedByCityDto build() {
+            return new MostPopularMovieGroupedByCityDto(city, movieFrequency);
+        }
+    }
 }

@@ -25,14 +25,14 @@ public class CreateMailsDtoValidator implements Validator<CreateMailsDto, Object
             return errors;
         }
 
-        if (isNull(item.getMails()) || item.getMails().isEmpty()) {
+        if (isNull(item.mails()) || item.mails().isEmpty()) {
             errors.put("mails", "are empty");
             return errors;
         }
 
         var counter = new AtomicInteger(1);
 
-        item.getMails().forEach(mail ->
+        item.mails().forEach(mail ->
                 errors.putAll(singleEmailValidator
                         .validate(mail)
                         .entrySet().stream()
@@ -56,7 +56,6 @@ public class CreateMailsDtoValidator implements Validator<CreateMailsDto, Object
                                             LinkedHashMap::new
                                     ));
                         }))));
-
         return errors;
     }
 }

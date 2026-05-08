@@ -4,7 +4,6 @@ import com.rzodeczko.application.exception.StatisticsServiceException;
 import com.rzodeczko.application.port.out.CityPort;
 import com.rzodeczko.application.port.out.MoviePort;
 import com.rzodeczko.application.port.out.TicketPurchasePort;
-import com.rzodeczko.application.service.StatisticsService;
 import com.rzodeczko.domain.cinema.Cinema;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
 import com.rzodeczko.domain.city.City;
@@ -91,8 +90,8 @@ class StatisticsServiceTest {
 
         StepVerifier.create(statisticsService.findCitiesFrequency())
                 .assertNext(dto -> {
-                    assertThat(dto.getCity()).isEqualTo("Warsaw");
-                    assertThat(dto.getFrequency()).isEqualTo(2);
+                    assertThat(dto.city()).isEqualTo("Warsaw");
+                    assertThat(dto.frequency()).isEqualTo(2);
                 })
                 .verifyComplete();
     }
@@ -115,15 +114,14 @@ class StatisticsServiceTest {
         City krakowWithCinema = City.builder().name("Krakow").cinemas(List.of(krakowCinema)).build();
 
         when(cityRepository.findAll()).thenReturn(Flux.just(warsaw, krakowWithCinema));
-        // Warsaw -> 2 tickets, Krakow -> 1 ticket. Max should be Warsaw.
         when(ticketPurchaseRepository.findAllByMovieEmissionInDateAndByCinemaHallsIdIn(any(LocalDate.class), anyList()))
                 .thenReturn(Flux.just(purchase(List.of(ticket("10"), ticket("10")))))
                 .thenReturn(Flux.just(purchase(List.of(ticket("10")))));
 
         StepVerifier.create(statisticsService.findCitiesWithMostFrequency())
                 .assertNext(dto -> {
-                    assertThat(dto.getCity()).isEqualTo("Warsaw");
-                    assertThat(dto.getFrequency()).isEqualTo(2);
+                    assertThat(dto.city()).isEqualTo("Warsaw");
+                    assertThat(dto.frequency()).isEqualTo(2);
                 })
                 .verifyComplete();
     }
@@ -139,8 +137,8 @@ class StatisticsServiceTest {
 
         StepVerifier.create(statisticsService.findAllMoviesFrequency())
                 .assertNext(dto -> {
-                    assertThat(dto.getMovie().getId()).isEqualTo("movie-1");
-                    assertThat(dto.getFrequency()).isEqualTo(3);
+                    assertThat(dto.movie().id()).isEqualTo("movie-1");
+                    assertThat(dto.frequency()).isEqualTo(3);
                 })
                 .verifyComplete();
     }
@@ -176,8 +174,8 @@ class StatisticsServiceTest {
 
         StepVerifier.create(statisticsService.findMostPopularMoviesGroupedByGenreInCity("Warsaw"))
                 .assertNext(dto -> {
-                    assertThat(dto.getGenre()).isEqualTo("Drama");
-                    assertThat(dto.getFrequency()).isEqualTo(2);
+                    assertThat(dto.genre()).isEqualTo("Drama");
+                    assertThat(dto.frequency()).isEqualTo(2);
                 })
                 .verifyComplete();
     }
@@ -191,8 +189,8 @@ class StatisticsServiceTest {
 
         StepVerifier.create(statisticsService.getAverageTicketPriceGroupedByCity())
                 .assertNext(dto -> {
-                    assertThat(dto.getCity()).isEqualTo("Warsaw");
-                    assertThat(dto.getAverageTicketPrice()).isEqualByComparingTo(new BigDecimal("15.00"));
+                    assertThat(dto.city()).isEqualTo("Warsaw");
+                    assertThat(dto.averageTicketPrice()).isEqualByComparingTo(new BigDecimal("15.00"));
                 })
                 .verifyComplete();
     }
@@ -206,8 +204,8 @@ class StatisticsServiceTest {
 
         StepVerifier.create(statisticsService.getAverageTicketPriceGroupedByCity())
                 .assertNext(dto -> {
-                    assertThat(dto.getCity()).isEqualTo("Warsaw");
-                    assertThat(dto.getAverageTicketPrice()).isEqualByComparingTo(BigDecimal.ZERO);
+                    assertThat(dto.city()).isEqualTo("Warsaw");
+                    assertThat(dto.averageTicketPrice()).isEqualByComparingTo(BigDecimal.ZERO);
                 })
                 .verifyComplete();
     }

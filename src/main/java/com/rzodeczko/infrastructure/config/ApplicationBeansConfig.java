@@ -3,6 +3,7 @@ package com.rzodeczko.infrastructure.config;
 import com.rzodeczko.application.port.out.*;
 import com.rzodeczko.application.service.*;
 import com.rzodeczko.application.validator.*;
+import com.rzodeczko.infrastructure.csv.CsvMovieParserAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -99,8 +100,15 @@ public class ApplicationBeansConfig {
     @Bean
     public MovieService movieService(MoviePort MoviePort,
                                      UserPort UserPort,
-                                     CreateMovieDtoValidator createMovieDtoValidator) {
-        return new MovieService(MoviePort, UserPort, createMovieDtoValidator);
+                                     CreateMovieDtoValidator createMovieDtoValidator,
+                                     MovieCsvParserPort movieCsvParserPort
+    ) {
+        return new MovieService(MoviePort, UserPort, createMovieDtoValidator, movieCsvParserPort);
+    }
+
+    @Bean
+    public MovieCsvParserPort movieCsvParserPort(CreateMovieDtoValidator createMovieDtoValidator) {
+        return new CsvMovieParserAdapter(createMovieDtoValidator);
     }
 
     @Bean
@@ -142,7 +150,7 @@ public class ApplicationBeansConfig {
     @Bean
     public UsersService usersService(UserPort UserPort,
                                      CreateUserDtoValidator createUserDtoValidator,
-                                     PasswordEncoder passwordEncoder,
+                                     PasswordEncoderPort passwordEncoder,
                                      AdminPort AdminPort,
                                      TransactionPort transactionPort) {
         return new UsersService(UserPort, createUserDtoValidator, passwordEncoder,

@@ -1,17 +1,24 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@Data
-public class CreateMailsDto {
+public record CreateMailsDto(
+        List<CreateMailDto> mails
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    private List<CreateMailDto> mails;
+    public static class Builder {
+        private List<CreateMailDto> mails;
+
+        public Builder mails(List<CreateMailDto> mails) {
+            this.mails = mails;
+            return this;
+        }
+
+        public CreateMailsDto build() {
+            return new CreateMailsDto(mails);
+        }
+    }
 }

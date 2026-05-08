@@ -1,16 +1,29 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public record MailDto(
+        String to,
+        String title
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class MailDto {
+    public static class Builder {
+        private String to;
+        private String title;
 
-    private String to;
-    private String title;
+        public Builder to(String to) {
+            this.to = to;
+            return this;
+        }
+
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public MailDto build() {
+            return new MailDto(to, title);
+        }
+    }
 }

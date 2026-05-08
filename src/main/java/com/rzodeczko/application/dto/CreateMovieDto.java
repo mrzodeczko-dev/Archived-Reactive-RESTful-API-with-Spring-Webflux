@@ -1,33 +1,16 @@
 package com.rzodeczko.application.dto;
 
 import com.rzodeczko.domain.movie.Movie;
-import com.opencsv.bean.CsvBindByName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class CreateMovieDto {
-
-    @CsvBindByName
-    private String genre;
-
-    @CsvBindByName
-    private String name;
-
-    @CsvBindByName
-    private Integer duration;
-
-    @CsvBindByName(format = "yyyy-MM-dd")
-    private String premiereDate;
-
+public record CreateMovieDto(
+        String genre,
+        String name,
+        Integer duration,
+        String premiereDate
+) {
     public Movie toEntity() {
         return Movie.builder()
                 .duration(duration)
@@ -35,7 +18,40 @@ public class CreateMovieDto {
                 .name(name)
                 .premiereDate(LocalDate.parse(premiereDate, DateTimeFormatter.ofPattern("dd-MM-yyyy")))
                 .build();
-
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String genre;
+        private String name;
+        private Integer duration;
+        private String premiereDate;
+
+        public Builder genre(String genre) {
+            this.genre = genre;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder duration(Integer duration) {
+            this.duration = duration;
+            return this;
+        }
+
+        public Builder premiereDate(String premiereDate) {
+            this.premiereDate = premiereDate;
+            return this;
+        }
+
+        public CreateMovieDto build() {
+            return new CreateMovieDto(genre, name, duration, premiereDate);
+        }
+    }
 }

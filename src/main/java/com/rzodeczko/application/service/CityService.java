@@ -49,20 +49,20 @@ public class CityService {
     public Mono<CityDto> addCinemaToCity(AddCinemaToCityDto addCinemaToCityDto) {
 
         Mono<City> result = cinemaHallPort.addOrUpdateMany(addCinemaToCityDto
-                .getCinemaHallsCapacity().stream()
-                .map(dtoVal -> CinemaHall.builder()
-                        .positions(ServiceUtils.buildPositions(dtoVal.getRowNo(), dtoVal.getColNo()))
-                        .movieEmissions(Collections.emptyList())
-                        .build())
-                .collect(Collectors.toList()))
+                        .cinemaHallsCapacity().stream()
+                        .map(dtoVal -> CinemaHall.builder()
+                                .positions(ServiceUtils.buildPositions(dtoVal.rowNo(), dtoVal.colNo()))
+                                .movieEmissions(Collections.emptyList())
+                                .build())
+                        .collect(Collectors.toList()))
                 .collectList()
                 .flatMap(cinemaHalls -> cinemaPort.addOrUpdate(Cinema.builder()
                         .cinemaHalls(cinemaHalls)
                         .build()))
                 .flatMap(cinema ->
-                        cityPort.findByName(addCinemaToCityDto.getCity())
+                        cityPort.findByName(addCinemaToCityDto.city())
                                 .switchIfEmpty(Mono.error(() -> new CityServiceException(
-                                        "No city with name: %s".formatted(addCinemaToCityDto.getCity()))))
+                                        "No city with name: %s".formatted(addCinemaToCityDto.city()))))
                                 .flatMap(cityEntity ->
                                         cinemaPort.addOrUpdate(cinema.setCity(cityEntity.getName()))
                                                 .then(cityPort.addOrUpdate(cityEntity.addCinema(cinema)))));

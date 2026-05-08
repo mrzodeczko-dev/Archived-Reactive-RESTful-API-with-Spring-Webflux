@@ -38,18 +38,53 @@ public class MovieEmission implements GenericEntity {
         return new Builder();
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public Movie getMovie() { return movie; }
-    public void setMovie(Movie movie) { this.movie = movie; }
-    public LocalDateTime getStartDateTime() { return startDateTime; }
-    public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
-    public Money getBaseTicketPrice() { return baseTicketPrice; }
-    public void setBaseTicketPrice(Money baseTicketPrice) { this.baseTicketPrice = baseTicketPrice; }
-    public String getCinemaHallId() { return cinemaHallId; }
-    public void setCinemaHallId(String cinemaHallId) { this.cinemaHallId = cinemaHallId; }
-    public Map<Position, Boolean> getIsPositionFree() { return isPositionFree; }
-    public void setIsPositionFree(Map<Position, Boolean> isPositionFree) { this.isPositionFree = isPositionFree; }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Movie getMovie() {
+        return movie;
+    }
+
+    public void setMovie(Movie movie) {
+        this.movie = movie;
+    }
+
+    public LocalDateTime getStartDateTime() {
+        return startDateTime;
+    }
+
+    public void setStartDateTime(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
+    }
+
+    public Money getBaseTicketPrice() {
+        return baseTicketPrice;
+    }
+
+    public void setBaseTicketPrice(Money baseTicketPrice) {
+        this.baseTicketPrice = baseTicketPrice;
+    }
+
+    public String getCinemaHallId() {
+        return cinemaHallId;
+    }
+
+    public void setCinemaHallId(String cinemaHallId) {
+        this.cinemaHallId = cinemaHallId;
+    }
+
+    public Map<Position, Boolean> getIsPositionFree() {
+        return isPositionFree;
+    }
+
+    public void setIsPositionFree(Map<Position, Boolean> isPositionFree) {
+        this.isPositionFree = isPositionFree;
+    }
 
     public List<Position> getFreePositions() {
         return isPositionFree
@@ -76,12 +111,38 @@ public class MovieEmission implements GenericEntity {
         private String cinemaHallId;
         private Map<Position, Boolean> isPositionFree;
 
-        public Builder id(String id) { this.id = id; return this; }
-        public Builder movie(Movie movie) { this.movie = movie; return this; }
-        public Builder startDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; return this; }
-        public Builder baseTicketPrice(Money baseTicketPrice) { this.baseTicketPrice = baseTicketPrice; return this; }
-        public Builder cinemaHallId(String cinemaHallId) { this.cinemaHallId = cinemaHallId; return this; }
-        public Builder isPositionFree(Map<Position, Boolean> isPositionFree) { this.isPositionFree = isPositionFree; return this; }
-        public MovieEmission build() { return new MovieEmission(id, movie, startDateTime, baseTicketPrice, cinemaHallId, isPositionFree); }
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder movie(Movie movie) {
+            this.movie = movie;
+            return this;
+        }
+
+        public Builder startDateTime(LocalDateTime startDateTime) {
+            this.startDateTime = startDateTime;
+            return this;
+        }
+
+        public Builder baseTicketPrice(Money baseTicketPrice) {
+            this.baseTicketPrice = baseTicketPrice;
+            return this;
+        }
+
+        public Builder cinemaHallId(String cinemaHallId) {
+            this.cinemaHallId = cinemaHallId;
+            return this;
+        }
+
+        public Builder isPositionFree(Map<Position, Boolean> isPositionFree) {
+            this.isPositionFree = isPositionFree;
+            return this;
+        }
+
+        public MovieEmission build() {
+            return new MovieEmission(id, movie, startDateTime, baseTicketPrice, cinemaHallId, isPositionFree);
+        }
     }
 }

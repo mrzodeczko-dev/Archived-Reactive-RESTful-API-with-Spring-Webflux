@@ -1,18 +1,31 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 
-@AllArgsConstructor
-@Builder
-@Data
-@NoArgsConstructor
-public class AverageTicketPriceByCityDto {
+public record AverageTicketPriceByCityDto(
+        String city,
+        BigDecimal averageTicketPrice
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    private String city;
-    private BigDecimal averageTicketPrice;
+    public static class Builder {
+        private String city;
+        private BigDecimal averageTicketPrice;
+
+        public Builder city(String city) {
+            this.city = city;
+            return this;
+        }
+
+        public Builder averageTicketPrice(BigDecimal averageTicketPrice) {
+            this.averageTicketPrice = averageTicketPrice;
+            return this;
+        }
+
+        public AverageTicketPriceByCityDto build() {
+            return new AverageTicketPriceByCityDto(city, averageTicketPrice);
+        }
+    }
 }

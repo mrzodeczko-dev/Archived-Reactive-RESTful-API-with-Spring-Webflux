@@ -9,7 +9,9 @@ public final class MovieMapper {
     }
 
     public static MovieDto toDto(Movie movie) {
-        if (movie == null) return null;
+        if (movie == null) {
+            return null;
+        }
         return MovieDto.builder()
                 .id(movie.getId())
                 .name(movie.getName())

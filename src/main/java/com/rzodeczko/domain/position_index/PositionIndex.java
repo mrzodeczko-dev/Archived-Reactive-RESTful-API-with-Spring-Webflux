@@ -21,10 +21,21 @@ public class PositionIndex {
         return new Builder();
     }
 
-    public Position getPosition() { return position; }
-    public void setPosition(Position position) { this.position = position; }
-    public boolean isFree() { return isFree; }
-    public void setFree(boolean free) { isFree = free; }
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    public boolean isFree() {
+        return isFree;
+    }
+
+    public void setFree(boolean free) {
+        isFree = free;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -43,8 +54,18 @@ public class PositionIndex {
         private Position position;
         private boolean isFree;
 
-        public Builder position(Position position) { this.position = position; return this; }
-        public Builder isFree(boolean isFree) { this.isFree = isFree; return this; }
-        public PositionIndex build() { return new PositionIndex(position, isFree); }
+        public Builder position(Position position) {
+            this.position = position;
+            return this;
+        }
+
+        public Builder isFree(boolean isFree) {
+            this.isFree = isFree;
+            return this;
+        }
+
+        public PositionIndex build() {
+            return new PositionIndex(position, isFree);
+        }
     }
 }

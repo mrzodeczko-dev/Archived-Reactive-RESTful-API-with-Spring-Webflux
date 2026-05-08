@@ -22,7 +22,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -109,7 +112,14 @@ public class MoviesHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })})
     public Mono<ServerResponse> addMovieToDatabaseWithCsvFile(final ServerRequest serverRequest) {
-        return movieService.uploadCSVFile(serverRequest.bodyToMono(Resource.class))
+        return serverRequest.bodyToMono(Resource.class)
+                .flatMapMany(resource -> {
+                    try {
+                        return movieService.uploadCSVFile(resource.getInputStream());
+                    } catch (IOException e) {
+                        return Flux.error(new MovieServiceException("Failed to read CSV file"));
+                    }
+                })
                 .collectList()
                 .flatMap(addedMovieList -> ServerResponse
                         .status(HttpStatus.CREATED)
@@ -179,7 +189,7 @@ public class MoviesHandler {
                 .flatMap(dto -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(movieService.getFilteredByPremiereDate(dto.getDateFrom(), dto.getDateTo()), MovieDto.class)
+                        .body(movieService.getFilteredByPremiereDate(dto.dateFrom(), dto.dateTo()), MovieDto.class)
                 );
     }
 
@@ -201,7 +211,7 @@ public class MoviesHandler {
                 .flatMap(dto -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(movieService.getFilteredByDuration(dto.getMinDuration(), dto.getMaxDuration()), MovieDto.class)
+                        .body(movieService.getFilteredByDuration(dto.minDuration(), dto.maxDuration()), MovieDto.class)
                 );
     }
 

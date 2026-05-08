@@ -31,14 +31,37 @@ public class CinemaHall implements GenericEntity {
         return new Builder();
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public List<Position> getPositions() { return positions; }
-    public void setPositions(List<Position> positions) { this.positions = positions; }
-    public String getCinemaId() { return cinemaId; }
-    public void setCinemaId(String cinemaId) { this.cinemaId = cinemaId; }
-    public List<MovieEmission> getMovieEmissions() { return movieEmissions; }
-    public void setMovieEmissions(List<MovieEmission> movieEmissions) { this.movieEmissions = movieEmissions; }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public List<Position> getPositions() {
+        return positions;
+    }
+
+    public void setPositions(List<Position> positions) {
+        this.positions = positions;
+    }
+
+    public String getCinemaId() {
+        return cinemaId;
+    }
+
+    public void setCinemaId(String cinemaId) {
+        this.cinemaId = cinemaId;
+    }
+
+    public List<MovieEmission> getMovieEmissions() {
+        return movieEmissions;
+    }
+
+    public void setMovieEmissions(List<MovieEmission> movieEmissions) {
+        this.movieEmissions = movieEmissions;
+    }
 
     public CinemaHall addMovieEmission(MovieEmission movieEmission) {
         if (nonNull(movieEmissions)) {
@@ -62,10 +85,28 @@ public class CinemaHall implements GenericEntity {
         private String cinemaId;
         private List<MovieEmission> movieEmissions;
 
-        public Builder id(String id) { this.id = id; return this; }
-        public Builder positions(List<Position> positions) { this.positions = positions; return this; }
-        public Builder cinemaId(String cinemaId) { this.cinemaId = cinemaId; return this; }
-        public Builder movieEmissions(List<MovieEmission> movieEmissions) { this.movieEmissions = movieEmissions; return this; }
-        public CinemaHall build() { return new CinemaHall(id, positions, cinemaId, movieEmissions); }
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder positions(List<Position> positions) {
+            this.positions = positions;
+            return this;
+        }
+
+        public Builder cinemaId(String cinemaId) {
+            this.cinemaId = cinemaId;
+            return this;
+        }
+
+        public Builder movieEmissions(List<MovieEmission> movieEmissions) {
+            this.movieEmissions = movieEmissions;
+            return this;
+        }
+
+        public CinemaHall build() {
+            return new CinemaHall(id, positions, cinemaId, movieEmissions);
+        }
     }
 }

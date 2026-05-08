@@ -59,10 +59,10 @@ public class EmailService {
                     .formatted(Validations.createErrorMessage(errors))));
         }
 
-        return Mono.fromRunnable(() -> mailPort.sendBulk(createMailDtoList.getMails()))
+        return Mono.fromRunnable(() -> mailPort.sendBulk(createMailDtoList.mails()))
                 .subscribeOn(Schedulers.boundedElastic())
                 .retryWhen(retrySpec())
-                .thenMany(Flux.fromIterable(createMailDtoList.getMails()))
+                .thenMany(Flux.fromIterable(createMailDtoList.mails()))
                 .map(CreateMailDto::toMailDto);
     }
 

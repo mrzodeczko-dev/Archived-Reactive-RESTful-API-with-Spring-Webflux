@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public interface CrudPort<T, ID> {
+public interface PersistencePort<T, ID> {
     Mono<T> addOrUpdate(T item);
     Flux<T> addOrUpdateMany(List<T> items);
     Flux<T> findAll();

@@ -11,7 +11,9 @@ public final class TicketOrderMapper {
     }
 
     public static TicketOrderDto toDto(TicketOrder o) {
-        if (o == null) return null;
+        if (o == null) {
+            return null;
+        }
         return TicketOrderDto.builder()
                 .id(o.getId())
                 .username(o.getUser() == null ? null : o.getUser().getUsername())

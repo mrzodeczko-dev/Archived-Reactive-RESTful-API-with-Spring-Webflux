@@ -79,7 +79,7 @@ class TicketOrderServiceTest {
                 .thenReturn(Flux.just(sampleOrder));
 
         StepVerifier.create(ticketOrderService.getAllTicketOrdersForLoggedUser("test@example.com"))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("order-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("order-1"))
                 .verifyComplete();
     }
 
@@ -122,7 +122,7 @@ class TicketOrderServiceTest {
         when(ticketOrderRepository.findById("order-1")).thenReturn(Mono.just(sampleOrder));
 
         StepVerifier.create(ticketOrderService.cancelOrder("test@example.com", "order-1"))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("order-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("order-1"))
                 .verifyComplete();
     }
 

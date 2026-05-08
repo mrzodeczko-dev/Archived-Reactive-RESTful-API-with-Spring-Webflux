@@ -1,18 +1,31 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@Data
-public class MovieFilteredByPremiereDate {
+public record MovieFilteredByPremiereDate(
+        LocalDate dateFrom,
+        LocalDate dateTo
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    private LocalDate dateFrom;
-    private LocalDate dateTo;
+    public static class Builder {
+        private LocalDate dateFrom;
+        private LocalDate dateTo;
+
+        public Builder dateFrom(LocalDate dateFrom) {
+            this.dateFrom = dateFrom;
+            return this;
+        }
+
+        public Builder dateTo(LocalDate dateTo) {
+            this.dateTo = dateTo;
+            return this;
+        }
+
+        public MovieFilteredByPremiereDate build() {
+            return new MovieFilteredByPremiereDate(dateFrom, dateTo);
+        }
+    }
 }

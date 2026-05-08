@@ -13,7 +13,9 @@ public final class CityMapper {
     }
 
     public static CityDto toDto(City city) {
-        if (city == null) return null;
+        if (city == null) {
+            return null;
+        }
         return CityDto.builder()
                 .id(city.getId())
                 .name(city.getName())

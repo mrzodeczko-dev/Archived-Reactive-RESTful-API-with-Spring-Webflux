@@ -65,11 +65,7 @@ class CinemaHallServiceTest {
         @Test
         @DisplayName("Happy path: valid DTO creates hall and updates cinema")
         void shouldAddHallSuccessfully() {
-            AddCinemaHallToCinemaDto dto = AddCinemaHallToCinemaDto.builder()
-                    .cinemaId("cinema-1")
-                    .rowNo(3)
-                    .colNo(4)
-                    .build();
+            AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(3, 4, "cinema-1");
 
             when(cinemaRepository.findById("cinema-1")).thenReturn(Mono.just(cinema));
             when(cinemaHallRepository.addOrUpdate(any())).thenReturn(Mono.just(cinemaHall));
@@ -77,7 +73,7 @@ class CinemaHallServiceTest {
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cinemaHallService.addCinemaHallToCinema(Mono.just(dto)))
-                    .assertNext(result -> assertThat(result.getId()).isEqualTo("hall-1"))
+                    .assertNext(result -> assertThat(result.id()).isEqualTo("hall-1"))
                     .verifyComplete();
 
             verify(cinemaHallRepository).addOrUpdate(any());
@@ -88,12 +84,7 @@ class CinemaHallServiceTest {
         @DisplayName("Validation error: null cinemaId throws CinemaHallServiceException")
         void shouldThrowWhenCinemaIdIsNull() {
             // Validator only checks cinemaId — supply null to actually trigger validation error
-            AddCinemaHallToCinemaDto dto = AddCinemaHallToCinemaDto.builder()
-                    .cinemaId(null)
-                    .rowNo(3)
-                    .colNo(4)
-                    .build();
-
+            AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(3, 4, null);
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cinemaHallService.addCinemaHallToCinema(Mono.just(dto)))
@@ -106,12 +97,7 @@ class CinemaHallServiceTest {
         @Test
         @DisplayName("Cinema not found: switchIfEmpty triggers CinemaHallServiceException")
         void shouldThrowWhenCinemaNotFound() {
-            AddCinemaHallToCinemaDto dto = AddCinemaHallToCinemaDto.builder()
-                    .cinemaId("no-cinema")
-                    .rowNo(3)
-                    .colNo(3)
-                    .build();
-
+            AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(3, 3, "no-cinema");
             when(cinemaRepository.findById("no-cinema")).thenReturn(Mono.empty());
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -126,11 +112,7 @@ class CinemaHallServiceTest {
         @Test
         @DisplayName("Position count: 3 cols × 2 rows creates 6 positions")
         void shouldCreateCorrectNumberOfPositions() {
-            AddCinemaHallToCinemaDto dto = AddCinemaHallToCinemaDto.builder()
-                    .cinemaId("cinema-1")
-                    .rowNo(2)
-                    .colNo(3)
-                    .build();
+            AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(2, 3, "cinema-1");
 
             when(cinemaRepository.findById("cinema-1")).thenReturn(Mono.just(cinema));
             when(cinemaHallRepository.addOrUpdate(any(CinemaHall.class)))
@@ -161,8 +143,8 @@ class CinemaHallServiceTest {
             when(cinemaHallRepository.findAll()).thenReturn(Flux.just(cinemaHall, hall2));
 
             StepVerifier.create(cinemaHallService.getAll())
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("hall-1"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("hall-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("hall-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("hall-2"))
                     .verifyComplete();
         }
 
@@ -185,7 +167,7 @@ class CinemaHallServiceTest {
             when(cinemaHallRepository.getAllForCinemaById("cinema-1")).thenReturn(Flux.just(cinemaHall));
 
             StepVerifier.create(cinemaHallService.getAllForCinema("cinema-1"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("hall-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("hall-1"))
                     .verifyComplete();
         }
 

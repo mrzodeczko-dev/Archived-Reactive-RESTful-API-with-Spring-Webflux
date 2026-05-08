@@ -3,7 +3,7 @@ package com.rzodeczko.application.port.out;
 import com.rzodeczko.domain.movie_emission.MovieEmission;
 import reactor.core.publisher.Flux;
 
-public interface MovieEmissionPort extends CrudPort<MovieEmission, String> {
+public interface MovieEmissionPort extends PersistencePort<MovieEmission, String> {
 
     Flux<MovieEmission> findMovieEmissionsByMovieId(String movieId);
 

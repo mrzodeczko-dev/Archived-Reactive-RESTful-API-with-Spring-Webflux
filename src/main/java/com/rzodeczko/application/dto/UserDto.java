@@ -1,27 +1,59 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class UserDto {
+public record UserDto(
+        String id,
+        String username,
+        String birthDate,
+        String role,
+        String email,
+        List<MovieDto> favoriteMovies
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    private String id;
-    private String username;
+    public static class Builder {
+        private String id;
+        private String username;
+        private String birthDate;
+        private String role;
+        private String email;
+        private List<MovieDto> favoriteMovies;
 
-    private String birthDate;
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
 
-    private String role;
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
 
-    private String email;
+        public Builder birthDate(String birthDate) {
+            this.birthDate = birthDate;
+            return this;
+        }
 
-    private List<MovieDto> favoriteMovies;
+        public Builder role(String role) {
+            this.role = role;
+            return this;
+        }
 
+        public Builder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public Builder favoriteMovies(List<MovieDto> favoriteMovies) {
+            this.favoriteMovies = favoriteMovies;
+            return this;
+        }
+
+        public UserDto build() {
+            return new UserDto(id, username, birthDate, role, email, favoriteMovies);
+        }
+    }
 }

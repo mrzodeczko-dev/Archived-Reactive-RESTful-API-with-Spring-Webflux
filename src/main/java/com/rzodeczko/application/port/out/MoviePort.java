@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
-public interface MoviePort extends CrudPort<Movie, String> {
+public interface MoviePort extends PersistencePort<Movie, String> {
     Mono<Movie> findByNameAndGenre(String name, String genre);
     Flux<Movie> findAllByGenre(String genre);
     Flux<Movie> findAllByName(String name);

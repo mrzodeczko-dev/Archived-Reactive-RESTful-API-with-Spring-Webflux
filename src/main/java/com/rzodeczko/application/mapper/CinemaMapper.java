@@ -12,7 +12,9 @@ public final class CinemaMapper {
     }
 
     public static CinemaDto toDto(Cinema cinema) {
-        if (cinema == null) return null;
+        if (cinema == null) {
+            return null;
+        }
         return CinemaDto.builder()
                 .id(cinema.getId())
                 .city(cinema.getCity())

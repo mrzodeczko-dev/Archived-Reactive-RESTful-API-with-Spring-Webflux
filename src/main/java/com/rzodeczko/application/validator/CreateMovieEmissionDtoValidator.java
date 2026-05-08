@@ -23,22 +23,22 @@ public class CreateMovieEmissionDtoValidator implements Validator<CreateMovieEmi
             errors.put("dto object", "is null");
             return errors;
         }
-        if (!isCinemaHallIdValid(item.getCinemaHallId())) {
+        if (!isCinemaHallIdValid(item.cinemaHallId())) {
             errors.put("cinemaHallId", "is null");
         }
 
-        if (!isMovieIdValid(item.getMovieId())) {
+        if (!isMovieIdValid(item.movieId())) {
             errors.put("movieId", "is null");
         }
 
-        if (!isStartTimeValid(item.getStartTime())) {
-            errors.put("start time: %s".formatted(item.getStartTime()), "is not valid. Valid format is: yyyy-MM-dd HH:mm");
+        if (!isStartTimeValid(item.startTime())) {
+            errors.put("start time: %s".formatted(item.startTime()), "is not valid. Valid format is: yyyy-MM-dd HH:mm");
         }
 
-        if (isNull(item.getBaseTicketPrice())) {
+        if (isNull(item.baseTicketPrice())) {
             errors.put("base ticket price", "is required");
-        } else if (!isBaseTicketPriceValid(item.getBaseTicketPrice())) {
-            errors.put("base ticket price: %s".formatted(item.getBaseTicketPrice()), "should have valid format \\d+(\\.\\d{2})?");
+        } else if (!isBaseTicketPriceValid(item.baseTicketPrice())) {
+            errors.put("base ticket price: %s".formatted(item.baseTicketPrice()), "should have valid format \\d+(\\.\\d{2})?");
         }
         return errors;
     }

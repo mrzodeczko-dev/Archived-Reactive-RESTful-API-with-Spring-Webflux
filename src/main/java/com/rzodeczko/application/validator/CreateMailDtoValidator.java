@@ -24,16 +24,16 @@ public class CreateMailDtoValidator implements Validator<CreateMailDto, String> 
             return errors;
         }
 
-        if (!isEmailValid(item.getTo())) {
-            errors.put("To email: %s".formatted(item.getTo()), "is not valid");
+        if (!isEmailValid(item.to())) {
+            errors.put("To email: %s".formatted(item.to()), "is not valid");
         }
 
-        if (!isHtmlContentValid(item.getHtmlContent())) {
+        if (!isHtmlContentValid(item.htmlContent())) {
             errors.put("Html Content", "is not valid");
         }
 
-        if (!isTittleValid(item.getTitle())) {
-            errors.put("Title: %s".formatted(item.getTitle()), "is not valid");
+        if (!isTittleValid(item.title())) {
+            errors.put("Title: %s".formatted(item.title()), "is not valid");
         }
 
         return errors;

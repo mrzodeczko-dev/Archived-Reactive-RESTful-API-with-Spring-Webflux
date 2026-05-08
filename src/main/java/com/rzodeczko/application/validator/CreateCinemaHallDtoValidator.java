@@ -24,12 +24,12 @@ public class CreateCinemaHallDtoValidator implements Validator<CreateCinemaHallD
             return errors;
         }
 
-        if (!isColNoValid(item.getColNo())) {
-            errors.put("colNo", "[%d] is not valid. Min required is: %s".formatted(item.getColNo(), MIN_NUMBER_OF_ROWS_AND_COL));
+        if (!isColNoValid(item.colNo())) {
+            errors.put("colNo", "[%d] is not valid. Min required is: %s".formatted(item.colNo(), MIN_NUMBER_OF_ROWS_AND_COL));
         }
 
-        if (!isRowNoValid(item.getRowNo())) {
-            errors.put("rowNo", "[%d] is not valid. Min required is: %s".formatted(item.getColNo(), MIN_NUMBER_OF_ROWS_AND_COL));
+        if (!isRowNoValid(item.rowNo())) {
+            errors.put("rowNo", "[%d] is not valid. Min required is: %s".formatted(item.colNo(), MIN_NUMBER_OF_ROWS_AND_COL));
         }
 
         return errors;

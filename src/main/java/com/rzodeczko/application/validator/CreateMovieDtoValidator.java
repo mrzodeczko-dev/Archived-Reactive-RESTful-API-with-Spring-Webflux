@@ -25,20 +25,20 @@ public class CreateMovieDtoValidator implements Validator<CreateMovieDto, String
             return errors;
         }
 
-        if (!isMovieGenreValid(item.getGenre())) {
-            errors.put("genre %s".formatted(item.getGenre()), "is not valid");
+        if (!isMovieGenreValid(item.genre())) {
+            errors.put("genre %s".formatted(item.genre()), "is not valid");
         }
 
-        if (!isMovieNameValid(item.getName())) {
-            errors.put("name %s".formatted(item.getName()), "is not valid");
+        if (!isMovieNameValid(item.name())) {
+            errors.put("name %s".formatted(item.name()), "is not valid");
         }
 
-        if (!isMovieDurationValid(item.getDuration())) {
-            errors.put("duration %s".formatted(item.getDuration()), "is not valid");
+        if (!isMovieDurationValid(item.duration())) {
+            errors.put("duration %s".formatted(item.duration()), "is not valid");
         }
 
-        if (!isPremiereDateValid(item.getPremiereDate())) {
-            errors.put("premiere date %s".formatted(item.getPremiereDate()), "is not valid");
+        if (!isPremiereDateValid(item.premiereDate())) {
+            errors.put("premiere date %s".formatted(item.premiereDate()), "is not valid");
         }
 
         return errors;
@@ -49,7 +49,7 @@ public class CreateMovieDtoValidator implements Validator<CreateMovieDto, String
         var dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         return nonNull(premiereDate) &&
                 GenericValidator.isDate(premiereDate, "dd-MM-yyyy", true) &&
-                LocalDate.from(dateTimeFormatter.parse(premiereDate)).compareTo(LocalDate.now()) > 0;
+                LocalDate.from(dateTimeFormatter.parse(premiereDate)).isAfter(LocalDate.now());
 
     }
 

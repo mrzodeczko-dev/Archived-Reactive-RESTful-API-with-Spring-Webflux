@@ -58,10 +58,10 @@ public class StatisticsService {
                     if (list.isEmpty()) {
                         return Flux.empty();
                     }
-                    int max = Collections.max(list, Comparator.comparing(CityFrequencyDto::getFrequency))
-                            .getFrequency();
+                    int max = Collections.max(list, Comparator.comparing(CityFrequencyDto::frequency))
+                            .frequency();
                     return Flux.fromIterable(list)
-                            .filter(dto -> dto.getFrequency().equals(max));
+                            .filter(dto -> dto.frequency().equals(max));
                 });
     }
 

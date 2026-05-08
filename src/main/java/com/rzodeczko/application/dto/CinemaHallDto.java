@@ -1,24 +1,52 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Data
-public class CinemaHallDto {
+public record CinemaHallDto(
+        String id,
+        String cinemaId,
+        Integer rowNo,
+        Integer colNo,
+        List<MovieEmissionDto> movieEmissions
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    private String id;
-    private String cinemaId;
+    public static class Builder {
+        private String id;
+        private String cinemaId;
+        private Integer rowNo;
+        private Integer colNo;
+        private List<MovieEmissionDto> movieEmissions;
 
-    private Integer rowNo;
-    private Integer colNo;
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
 
-    private List<MovieEmissionDto> movieEmissions;
+        public Builder cinemaId(String cinemaId) {
+            this.cinemaId = cinemaId;
+            return this;
+        }
 
+        public Builder rowNo(Integer rowNo) {
+            this.rowNo = rowNo;
+            return this;
+        }
+
+        public Builder colNo(Integer colNo) {
+            this.colNo = colNo;
+            return this;
+        }
+
+        public Builder movieEmissions(List<MovieEmissionDto> movieEmissions) {
+            this.movieEmissions = movieEmissions;
+            return this;
+        }
+
+        public CinemaHallDto build() {
+            return new CinemaHallDto(id, cinemaId, rowNo, colNo, movieEmissions);
+        }
+    }
 }

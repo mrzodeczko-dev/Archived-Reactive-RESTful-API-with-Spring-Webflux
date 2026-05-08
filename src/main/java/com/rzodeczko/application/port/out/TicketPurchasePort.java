@@ -6,7 +6,7 @@ import reactor.core.publisher.Flux;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface TicketPurchasePort extends CrudPort<TicketPurchase, String> {
+public interface TicketPurchasePort extends PersistencePort<TicketPurchase, String> {
 
     Flux<TicketPurchase> findAllByUserUsername(String username);
 

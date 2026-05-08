@@ -9,20 +9,20 @@ import java.util.List;
 
 public interface TicketDtoMarker {
 
-    String getMovieEmissionId();
+    String movieEmissionId();
 
-    List<TicketDetailsDto> getTicketsDetails();
+    List<TicketDetailsDto> ticketsDetails();
 
-    TicketGroupType getTicketGroupType();
+    TicketGroupType ticketGroupType();
 
     default boolean areAllPositionsAvailable(List<Position> freePositions) {
-        return getTicketsDetails().stream()
-                .map(TicketDetailsDto::getPosition)
+        return ticketsDetails().stream()
+                .map(TicketDetailsDto::position)
                 .allMatch(freePositions::contains);
     }
 
     default Discount getBaseDiscount() {
-        return getTicketGroupType().getDiscount();
+        return ticketGroupType().getDiscount();
     }
 
 }

@@ -40,14 +40,14 @@ public class CinemaHallService {
                     }
                     return Mono.just(dto);
                 })
-                .flatMap(dto -> cinemaPort.findById(dto.getCinemaId())
+                .flatMap(dto -> cinemaPort.findById(dto.cinemaId())
                         .switchIfEmpty(Mono.error(new CinemaHallServiceException(
-                                "No cinema with id: %s".formatted(dto.getCinemaId()))))
+                                "No cinema with id: %s".formatted(dto.cinemaId()))))
                         .flatMap(cinema -> cinemaHallPort.addOrUpdate(CinemaHall.builder()
-                                .cinemaId(cinema.getId())
-                                .movieEmissions(new ArrayList<>())
-                                .positions(createPositions(dto.getColNo(), dto.getRowNo()))
-                                .build())
+                                        .cinemaId(cinema.getId())
+                                        .movieEmissions(new ArrayList<>())
+                                        .positions(createPositions(dto.colNo(), dto.rowNo()))
+                                        .build())
                                 .flatMap(savedCinemaHall -> {
                                     cinema.getCinemaHalls().add(savedCinemaHall);
                                     return cinemaPort.addOrUpdate(cinema)

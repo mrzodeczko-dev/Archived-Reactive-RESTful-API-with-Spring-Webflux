@@ -5,11 +5,7 @@ import com.rzodeczko.application.dto.TicketDetailsDto;
 import com.rzodeczko.application.dto.TicketOrderDto;
 import com.rzodeczko.application.exception.TicketOrderServiceException;
 import com.rzodeczko.application.mapper.TicketOrderMapper;
-import com.rzodeczko.application.port.out.MovieEmissionPort;
-import com.rzodeczko.application.port.out.TicketOrderPort;
-import com.rzodeczko.application.port.out.TicketPort;
-import com.rzodeczko.application.port.out.TransactionPort;
-import com.rzodeczko.application.port.out.UserPort;
+import com.rzodeczko.application.port.out.*;
 import com.rzodeczko.application.validator.CreateTicketsOrderDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
 import com.rzodeczko.domain.ticket.Ticket;
@@ -57,32 +53,32 @@ public class TicketOrderService {
 
         Mono<TicketOrder> result = principal
                 .flatMap(p -> movieEmissionPort
-                        .findById(createTicketOrderDto.getMovieEmissionId())
+                        .findById(createTicketOrderDto.movieEmissionId())
                         .switchIfEmpty(Mono.error(() -> new TicketOrderServiceException(
-                                "No movie emission with id: %s".formatted(createTicketOrderDto.getMovieEmissionId()))))
+                                "No movie emission with id: %s".formatted(createTicketOrderDto.movieEmissionId()))))
                         .flatMap(movieEmission ->
                                 createTicketOrderDto.areAllPositionsAvailable(movieEmission.getFreePositions())
                                         ? Mono.just(movieEmission)
                                         : Mono.error(new TicketOrderServiceException("Positions are not valid")))
                         .flatMap(movieEmission -> movieEmissionPort
                                 .addOrUpdate(movieEmission.removeFreePositions(
-                                        createTicketOrderDto.getTicketsDetails().stream()
-                                                .map(TicketDetailsDto::getPosition)
+                                        createTicketOrderDto.ticketsDetails().stream()
+                                                .map(TicketDetailsDto::position)
                                                 .collect(Collectors.toList())))
                                 .flatMap(ignored -> userPort.findByUsername(p.getName()))
                                 .map(user -> TicketOrder.builder()
                                         .orderDate(LocalDate.now())
                                         .movieEmission(movieEmission)
-                                        .ticketGroupType(createTicketOrderDto.getTicketGroupType())
+                                        .ticketGroupType(createTicketOrderDto.ticketGroupType())
                                         .ticketOrderStatus(TicketOrderStatus.ORDERED)
                                         .user(user)
-                                        .tickets(createTicketOrderDto.getTicketsDetails().stream()
+                                        .tickets(createTicketOrderDto.ticketsDetails().stream()
                                                 .map(td -> Ticket.builder()
-                                                        .position(td.getPosition())
-                                                        .type(td.getIndividualTicketType())
+                                                        .position(td.position())
+                                                        .type(td.individualTicketType())
                                                         .ticketStatus(TicketStatus.PURCHASED)
                                                         .discount(createTicketOrderDto.getBaseDiscount()
-                                                                .add(td.getIndividualTicketType().getDiscount()))
+                                                                .add(td.individualTicketType().getDiscount()))
                                                         .build())
                                                 .toList())
                                         .build())))

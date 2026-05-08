@@ -22,7 +22,7 @@ public class AddCinemaHallToCinemaDtoValidator implements Validator<AddCinemaHal
             return errors;
         }
 
-        if (isNull(item.getCinemaId())) {
+        if (isNull(item.cinemaId())) {
             errors.put("cinema id", "is null");
         }
 

@@ -33,7 +33,7 @@ springdoc:
   api-docs:
     groups:
       enabled: true
-  packages-to-scan: com.app
+  packages-to-scan: com.rzodeczko
   swagger-ui:
     path: /docs
     config-url: /v3/api-docs/swagger-config

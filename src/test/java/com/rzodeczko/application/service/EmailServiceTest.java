@@ -4,7 +4,6 @@ import com.rzodeczko.application.dto.CreateMailDto;
 import com.rzodeczko.application.dto.CreateMailsDto;
 import com.rzodeczko.application.exception.EmailServiceException;
 import com.rzodeczko.application.port.out.MailPort;
-import com.rzodeczko.application.service.EmailService;
 import com.rzodeczko.application.validator.CreateMailDtoValidator;
 import com.rzodeczko.application.validator.CreateMailsDtoValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,8 +70,8 @@ class EmailServiceTest {
 
         StepVerifier.create(emailService.sendSingleEmail(validMail))
                 .assertNext(dto -> {
-                    assertThat(dto.getTo()).isEqualTo("user@example.com");
-                    assertThat(dto.getTitle()).isEqualTo("Hello");
+                    assertThat(dto.to()).isEqualTo("user@example.com");
+                    assertThat(dto.title()).isEqualTo("Hello");
                 })
                 .verifyComplete();
 
@@ -107,8 +106,8 @@ class EmailServiceTest {
         when(createMailsDtoValidator.validate(bulk)).thenReturn(new HashMap<>());
 
         StepVerifier.create(emailService.sendMultipleEmails(bulk))
-                .assertNext(dto -> assertThat(dto.getTo()).isEqualTo("user@example.com"))
-                .assertNext(dto -> assertThat(dto.getTo()).isEqualTo("user2@example.com"))
+                .assertNext(dto -> assertThat(dto.to()).isEqualTo("user@example.com"))
+                .assertNext(dto -> assertThat(dto.to()).isEqualTo("user2@example.com"))
                 .verifyComplete();
 
         verify(mailPort, times(1)).sendBulk(anyList());

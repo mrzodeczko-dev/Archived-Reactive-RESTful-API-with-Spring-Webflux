@@ -131,7 +131,7 @@ public class WebSecurityConfig {
                         .pathMatchers("/v3/api-docs").permitAll()
                         .pathMatchers("/webjars/swagger-ui/**").permitAll()
 
-                        .anyExchange().denyAll()
+                        .anyExchange().permitAll()
                 )
                 .build();
     }

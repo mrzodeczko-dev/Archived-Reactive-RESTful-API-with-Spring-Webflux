@@ -27,10 +27,10 @@ public class CreateUserDtoValidator implements Validator<CreateUserDto, String> 
             return errors;
         }
 
-        errors.putAll(validateBirthDate(createUserDto.getBirthDate()));
-        errors.putAll(validateUsername(createUserDto.getUsername()));
-        errors.putAll(validatePassword(createUserDto.getPassword(), createUserDto.getPasswordConfirmation()));
-        errors.putAll(validateEmail(createUserDto.getEmail()));
+        errors.putAll(validateBirthDate(createUserDto.birthDate()));
+        errors.putAll(validateUsername(createUserDto.username()));
+        errors.putAll(validatePassword(createUserDto.password(), createUserDto.passwordConfirmation()));
+        errors.putAll(validateEmail(createUserDto.email()));
 
         return errors;
     }
@@ -43,7 +43,7 @@ public class CreateUserDtoValidator implements Validator<CreateUserDto, String> 
             errors.put("Birth date", "is null");
         } else if (!GenericValidator.isDate(birthDate, DATE_FORMAT, true)) {
             errors.put("Birth date %s:".formatted(birthDate), "Birth date format should be: %s".formatted(DATE_FORMAT));
-        } else if (LocalDate.now().minusYears(18).compareTo(LocalDate.from(dateTimeFormatter.parse(birthDate))) < 0) {
+        } else if (LocalDate.now().minusYears(18).isBefore(LocalDate.from(dateTimeFormatter.parse(birthDate)))) {
             errors.put("Birt date", "User has to be an adult");
         }
 

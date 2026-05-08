@@ -76,7 +76,7 @@ class CityServiceTest {
             when(cityPort.addOrUpdate(any())).thenReturn(Mono.just(cityWarsaw));
 
             StepVerifier.create(cityService.addCity(Mono.just(dto)))
-                    .assertNext(result -> assertThat(result.getName()).isEqualTo("Warsaw"))
+                    .assertNext(result -> assertThat(result.name()).isEqualTo("Warsaw"))
                     .verifyComplete();
         }
 
@@ -103,7 +103,7 @@ class CityServiceTest {
             when(cityPort.findByName("Warsaw")).thenReturn(Mono.just(cityWarsaw));
 
             StepVerifier.create(cityService.findByName("Warsaw"))
-                    .assertNext(dto -> assertThat(dto.getName()).isEqualTo("Warsaw"))
+                    .assertNext(dto -> assertThat(dto.name()).isEqualTo("Warsaw"))
                     .verifyComplete();
         }
 
@@ -132,8 +132,8 @@ class CityServiceTest {
             when(cityPort.findAll()).thenReturn(Flux.just(cityWarsaw, city2));
 
             StepVerifier.create(cityService.getAll())
-                    .assertNext(dto -> assertThat(dto.getName()).isEqualTo("Warsaw"))
-                    .assertNext(dto -> assertThat(dto.getName()).isEqualTo("Krakow"))
+                    .assertNext(dto -> assertThat(dto.name()).isEqualTo("Warsaw"))
+                    .assertNext(dto -> assertThat(dto.name()).isEqualTo("Krakow"))
                     .verifyComplete();
         }
 
@@ -172,7 +172,7 @@ class CityServiceTest {
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cityService.addCinemaToCity(dto))
-                    .assertNext(result -> assertThat(result.getName()).isEqualTo("Warsaw"))
+                    .assertNext(result -> assertThat(result.name()).isEqualTo("Warsaw"))
                     .verifyComplete();
         }
 

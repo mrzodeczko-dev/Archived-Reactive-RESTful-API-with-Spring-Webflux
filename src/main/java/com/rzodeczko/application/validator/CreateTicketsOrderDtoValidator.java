@@ -22,8 +22,8 @@ public class CreateTicketsOrderDtoValidator implements Validator<CreateTicketOrd
 
     private Map<String, String> validateTicketOrder(Map<String, String> currentErrors, CreateTicketOrderDto item) {
 
-        if (nonNull(item) && !isTicketOrderTypeValid(item.getTicketGroupType())) {
-            currentErrors.put("ticketOrderType {%s}".formatted(item.getTicketGroupType()), "is not valid");
+        if (nonNull(item) && !isTicketOrderTypeValid(item.ticketGroupType())) {
+            currentErrors.put("ticketOrderType", "is null");
         }
 
         return currentErrors;

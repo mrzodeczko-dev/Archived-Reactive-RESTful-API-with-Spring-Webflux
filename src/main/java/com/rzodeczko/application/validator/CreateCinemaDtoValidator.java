@@ -25,14 +25,14 @@ public class CreateCinemaDtoValidator implements Validator<CreateCinemaDto, Stri
             return errors;
         }
 
-        if (isBlank(item.getCity())) {
+        if (isBlank(item.city())) {
             errors.put("City name", "is blank");
         }
 
-        if (isNull(item.getCinemaHallsCapacity())) {
+        if (isNull(item.cinemaHallsCapacity())) {
             errors.put("Cinema halls capacity", "are required");
         } else {
-            errors.putAll(validateCinemaHalls(item.getCinemaHallsCapacity()));
+            errors.putAll(validateCinemaHalls(item.cinemaHallsCapacity()));
         }
 
         return errors;
@@ -65,15 +65,13 @@ public class CreateCinemaDtoValidator implements Validator<CreateCinemaDto, Stri
         } else if (!isSingleHallCapacityValid(createCinemaHallDto)) {
             errors.put(
                     "cinemaHall no. %d".formatted(counter),
-                    "cinema hall row and col numbers must be positive integer, actual values are: row: %d, col: %d".formatted(createCinemaHallDto.getRowNo(), createCinemaHallDto.getColNo()));
+                    "cinema hall row and col numbers must be positive integer, actual values are: row: %d, col: %d".formatted(createCinemaHallDto.rowNo(), createCinemaHallDto.colNo()));
         }
 
         return errors;
     }
 
     private boolean isSingleHallCapacityValid(CreateCinemaHallDto createCinemaHallDto) {
-        return createCinemaHallDto.getColNo() > 0 && createCinemaHallDto.getRowNo() > 0;
+        return createCinemaHallDto.colNo() > 0 && createCinemaHallDto.rowNo() > 0;
     }
-
-
 }

@@ -4,7 +4,6 @@ import com.rzodeczko.application.dto.CreateMovieDto;
 import com.rzodeczko.application.exception.MovieServiceException;
 import com.rzodeczko.application.port.out.MoviePort;
 import com.rzodeczko.application.port.out.UserPort;
-import com.rzodeczko.application.service.MovieService;
 import com.rzodeczko.application.validator.CreateMovieDtoValidator;
 import com.rzodeczko.domain.movie.Movie;
 import com.rzodeczko.domain.security.User;
@@ -83,8 +82,8 @@ class MovieServiceTest {
             when(movieRepository.findAll()).thenReturn(Flux.just(drama2026, action2025));
 
             StepVerifier.create(movieService.getAll())
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
 
@@ -127,7 +126,7 @@ class MovieServiceTest {
             when(movieRepository.findAllByGenre("Drama")).thenReturn(Flux.just(drama2026));
 
             StepVerifier.create(movieService.getFilteredByKeyword("Drama"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 
@@ -138,7 +137,7 @@ class MovieServiceTest {
             when(movieRepository.findAllByGenre("Fast Burn")).thenReturn(Flux.empty());
 
             StepVerifier.create(movieService.getFilteredByKeyword("Fast Burn"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
 
@@ -181,7 +180,7 @@ class MovieServiceTest {
             when(movieRepository.findAllByGenre("Action")).thenReturn(Flux.just(action2025));
 
             StepVerifier.create(movieService.getFilteredByGenre("Action"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
     }
@@ -204,7 +203,7 @@ class MovieServiceTest {
             when(movieRepository.findAllByName("Quiet Storm")).thenReturn(Flux.just(drama2026));
 
             StepVerifier.create(movieService.getFilteredByName("Quiet Storm"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
     }
@@ -241,7 +240,7 @@ class MovieServiceTest {
                     .thenReturn(Flux.just(action2025));
 
             StepVerifier.create(movieService.getFilteredByDuration(90, 100))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
 
@@ -252,7 +251,7 @@ class MovieServiceTest {
                     .thenReturn(Flux.just(drama2026));
 
             StepVerifier.create(movieService.getFilteredByDuration(100, null))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 
@@ -263,7 +262,7 @@ class MovieServiceTest {
                     .thenReturn(Flux.just(action2025));
 
             StepVerifier.create(movieService.getFilteredByDuration(null, 100))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
     }
@@ -296,7 +295,7 @@ class MovieServiceTest {
                     .thenReturn(Flux.just(drama2026));
 
             StepVerifier.create(movieService.getFilteredByPremiereDate(min, max))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 
@@ -308,7 +307,7 @@ class MovieServiceTest {
                     .thenReturn(Flux.just(drama2026));
 
             StepVerifier.create(movieService.getFilteredByPremiereDate(min, null))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 
@@ -320,7 +319,7 @@ class MovieServiceTest {
                     .thenReturn(Flux.just(action2025));
 
             StepVerifier.create(movieService.getFilteredByPremiereDate(null, max))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-2"))
                     .verifyComplete();
         }
     }
@@ -339,7 +338,7 @@ class MovieServiceTest {
             when(userRepository.addOrUpdate(any())).thenReturn(Mono.just(user));
 
             StepVerifier.create(movieService.addMovieToFavorites("movie-1", "jan@example.com"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 
@@ -393,7 +392,7 @@ class MovieServiceTest {
             when(movieRepository.addOrUpdate(any())).thenReturn(Mono.just(drama2026));
 
             StepVerifier.create(movieService.addMovie(Mono.just(dto)))
-                    .assertNext(result -> assertThat(result.getId()).isEqualTo("movie-1"))
+                    .assertNext(result -> assertThat(result.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 
@@ -421,7 +420,7 @@ class MovieServiceTest {
             when(movieRepository.findById("movie-1")).thenReturn(Mono.just(drama2026));
 
             StepVerifier.create(movieService.getById("movie-1"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 
@@ -443,7 +442,7 @@ class MovieServiceTest {
             when(movieRepository.deleteById("movie-1")).thenReturn(Mono.just(drama2026));
 
             StepVerifier.create(movieService.deleteMovieById("movie-1"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("movie-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
                     .verifyComplete();
         }
 

@@ -2,6 +2,7 @@ package com.rzodeczko.presentation.routing.handlers;
 
 import com.rzodeczko.application.dto.ResponseErrorDto;
 import com.rzodeczko.application.exception.AuthenticationException;
+import com.rzodeczko.application.port.out.PasswordEncoderPort;
 import com.rzodeczko.infrastructure.aspect.annotations.Loggable;
 import com.rzodeczko.infrastructure.security.AppUserDetailsService;
 import com.rzodeczko.infrastructure.security.dto.AuthenticationDto;
@@ -16,7 +17,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -31,7 +31,7 @@ import static java.util.Objects.isNull;
 public class LoginHandler {
 
     private final AppUserDetailsService appUserDetailsService;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoderPort passwordEncoder;
     private final AppTokensService appTokensService;
 
     @Loggable

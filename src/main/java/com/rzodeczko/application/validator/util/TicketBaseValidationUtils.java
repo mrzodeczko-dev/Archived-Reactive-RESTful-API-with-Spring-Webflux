@@ -30,12 +30,12 @@ public class TicketBaseValidationUtils {
 
     public static boolean areTicketDetailsValid(List<TicketDetailsDto> ticketDetails) {
         return nonNull(ticketDetails) && !ticketDetails.isEmpty()
-                && arePositionsUnique(ticketDetails.stream().map(TicketDetailsDto::getPosition).collect(Collectors.toList()))
+                && arePositionsUnique(ticketDetails.stream().map(TicketDetailsDto::position).collect(Collectors.toList()))
                 && ticketDetails.stream().allMatch(TicketBaseValidationUtils::isSingleTicketDetailValid);
     }
 
     private static boolean isSingleTicketDetailValid(TicketDetailsDto ticketDetailsDto) {
-        return nonNull(ticketDetailsDto) && isPositionValid(ticketDetailsDto.getPosition());
+        return nonNull(ticketDetailsDto) && isPositionValid(ticketDetailsDto.position());
     }
 
     private static boolean arePositionsUnique(List<Position> positions) {
@@ -53,12 +53,12 @@ public class TicketBaseValidationUtils {
             return errors;
         }
 
-        if (!isMovieEmissionIdValid(item.getMovieEmissionId())) {
-            errors.put("movieEmissionId {%s}".formatted(item.getMovieEmissionId()), "is not valid");
+        if (!isMovieEmissionIdValid(item.movieEmissionId())) {
+            errors.put("movieEmissionId {%s}".formatted(item.movieEmissionId()), "is not valid");
         }
 
-        if (!areTicketDetailsValid(item.getTicketsDetails())) {
-            errors.put("ticketDetails {%s}".formatted(item.getTicketsDetails()), "are not valid");
+        if (!areTicketDetailsValid(item.ticketsDetails())) {
+            errors.put("ticketDetails {%s}".formatted(item.ticketsDetails()), "are not valid");
         }
 
         return errors;

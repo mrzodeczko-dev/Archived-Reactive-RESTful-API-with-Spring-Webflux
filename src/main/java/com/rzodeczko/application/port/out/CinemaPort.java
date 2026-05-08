@@ -4,7 +4,7 @@ import com.rzodeczko.domain.cinema.Cinema;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface CinemaPort extends CrudPort<Cinema, String> {
+public interface CinemaPort extends PersistencePort<Cinema, String> {
 
     Mono<Cinema> findByCinemaHallId(String id);
 

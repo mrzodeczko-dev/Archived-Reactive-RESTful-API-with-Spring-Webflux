@@ -1,16 +1,29 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public record MovieFrequencyByGenreDto(
+        String genre,
+        Integer frequency
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class MovieFrequencyByGenreDto {
+    public static class Builder {
+        private String genre;
+        private Integer frequency;
 
-    private String genre;
-    private Integer frequency;
+        public Builder genre(String genre) {
+            this.genre = genre;
+            return this;
+        }
+
+        public Builder frequency(Integer frequency) {
+            this.frequency = frequency;
+            return this;
+        }
+
+        public MovieFrequencyByGenreDto build() {
+            return new MovieFrequencyByGenreDto(genre, frequency);
+        }
+    }
 }

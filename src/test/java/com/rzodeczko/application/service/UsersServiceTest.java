@@ -4,9 +4,9 @@ import com.rzodeczko.application.dto.CreateUserDto;
 import com.rzodeczko.application.exception.RegistrationUserException;
 import com.rzodeczko.application.exception.UserServiceException;
 import com.rzodeczko.application.port.out.AdminPort;
+import com.rzodeczko.application.port.out.PasswordEncoderPort;
 import com.rzodeczko.application.port.out.TransactionPort;
 import com.rzodeczko.application.port.out.UserPort;
-import com.rzodeczko.application.service.UsersService;
 import com.rzodeczko.application.validator.CreateUserDtoValidator;
 import com.rzodeczko.domain.security.Admin;
 import com.rzodeczko.domain.security.User;
@@ -38,7 +38,7 @@ class UsersServiceTest {
     @Mock
     private CreateUserDtoValidator createUserDtoValidator;
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoderPort passwordEncoder;
     @Mock
     private AdminPort adminPort;
     @Mock
@@ -81,7 +81,7 @@ class UsersServiceTest {
             when(userPort.addOrUpdate(any())).thenReturn(Mono.just(userJan));
 
             StepVerifier.create(usersService.register(validCreateDto))
-                    .assertNext(dto -> assertThat(dto.getUsername()).isEqualTo("jan@example.com"))
+                    .assertNext(dto -> assertThat(dto.username()).isEqualTo("jan@example.com"))
                     .verifyComplete();
 
             verify(passwordEncoder).encode("Secret123!");
@@ -146,8 +146,8 @@ class UsersServiceTest {
             when(userPort.findAll()).thenReturn(Flux.just(userJan, user2));
 
             StepVerifier.create(usersService.getAll())
-                    .assertNext(dto -> assertThat(dto.getUsername()).isEqualTo("jan@example.com"))
-                    .assertNext(dto -> assertThat(dto.getUsername()).isEqualTo("anna@example.com"))
+                    .assertNext(dto -> assertThat(dto.username()).isEqualTo("jan@example.com"))
+                    .assertNext(dto -> assertThat(dto.username()).isEqualTo("anna@example.com"))
                     .verifyComplete();
         }
 
@@ -169,7 +169,7 @@ class UsersServiceTest {
             when(userPort.findByUsername("jan@example.com")).thenReturn(Mono.just(userJan));
 
             StepVerifier.create(usersService.getByUsername("jan@example.com"))
-                    .assertNext(dto -> assertThat(dto.getUsername()).isEqualTo("jan@example.com"))
+                    .assertNext(dto -> assertThat(dto.username()).isEqualTo("jan@example.com"))
                     .verifyComplete();
         }
 
@@ -202,7 +202,7 @@ class UsersServiceTest {
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(usersService.promoteUserToAdminRole("jan@example.com"))
-                    .assertNext(dto -> assertThat(dto.getUsername()).isEqualTo("jan@example.com"))
+                    .assertNext(dto -> assertThat(dto.username()).isEqualTo("jan@example.com"))
                     .verifyComplete();
 
             verify(userPort).deleteById(userJan.getId());

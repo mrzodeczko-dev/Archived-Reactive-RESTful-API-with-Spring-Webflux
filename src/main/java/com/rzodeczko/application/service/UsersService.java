@@ -6,6 +6,7 @@ import com.rzodeczko.application.exception.RegistrationUserException;
 import com.rzodeczko.application.exception.UserServiceException;
 import com.rzodeczko.application.mapper.UserMapper;
 import com.rzodeczko.application.port.out.AdminPort;
+import com.rzodeczko.application.port.out.PasswordEncoderPort;
 import com.rzodeczko.application.port.out.TransactionPort;
 import com.rzodeczko.application.port.out.UserPort;
 import com.rzodeczko.application.service.enums.UserField;
@@ -15,7 +16,6 @@ import com.rzodeczko.domain.security.Admin;
 import com.rzodeczko.domain.security.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -31,7 +31,7 @@ public class UsersService {
 
     private final UserPort userPort;
     private final CreateUserDtoValidator createUserDtoValidator;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoderPort passwordEncoder;
     private final AdminPort adminPort;
     private final TransactionPort transactionPort;
 
@@ -42,8 +42,8 @@ public class UsersService {
             return Mono.error(() -> new RegistrationUserException(Validations.createErrorMessage(errors)));
         }
 
-        return returnMonoErrorIfExists(userPort::findByUsername, UserField.USERNAME, createUserDto.getUsername())
-                .then(returnMonoErrorIfExists(userPort::findByEmail, UserField.EMAIL, createUserDto.getEmail()))
+        return returnMonoErrorIfExists(userPort::findByUsername, UserField.USERNAME, createUserDto.username())
+                .then(returnMonoErrorIfExists(userPort::findByEmail, UserField.EMAIL, createUserDto.email()))
                 .then(createUser(createUserDto).map(UserMapper::toDto));
     }
 
@@ -55,13 +55,13 @@ public class UsersService {
     }
 
     private Mono<User> createUser(final CreateUserDto createUserDto) {
-        return Mono.fromCallable(() -> nonNull(createUserDto.getPassword())
-                        ? passwordEncoder.encode(createUserDto.getPassword())
+        return Mono.fromCallable(() -> nonNull(createUserDto.password())
+                        ? passwordEncoder.encode(createUserDto.password())
                         : null)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(encodedPassword -> userPort
                         .addOrUpdate(createUserDto
-                                .setPassword(encodedPassword)
+                                .withPassword(encodedPassword)
                                 .toEntity()));
     }
 

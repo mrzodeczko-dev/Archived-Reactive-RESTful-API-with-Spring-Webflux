@@ -1,15 +1,22 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public record ResponseErrorDto(
+        ErrorMessageDto error
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class ResponseErrorDto {
+    public static class Builder {
+        private ErrorMessageDto error;
 
-    private ErrorMessageDto error;
+        public Builder error(ErrorMessageDto error) {
+            this.error = error;
+            return this;
+        }
+
+        public ResponseErrorDto build() {
+            return new ResponseErrorDto(error);
+        }
+    }
 }

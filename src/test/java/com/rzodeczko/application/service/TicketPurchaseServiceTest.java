@@ -4,7 +4,6 @@ import com.rzodeczko.application.dto.CreateTicketPurchaseDto;
 import com.rzodeczko.application.exception.TicketOrderServiceException;
 import com.rzodeczko.application.exception.TicketPurchaseServiceException;
 import com.rzodeczko.application.port.out.*;
-import com.rzodeczko.application.service.TicketPurchaseService;
 import com.rzodeczko.application.validator.CreateTicketPurchaseDtoValidator;
 import com.rzodeczko.domain.cinema.Cinema;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
@@ -189,7 +188,7 @@ class TicketPurchaseServiceTest {
                 .thenReturn(Flux.just(samplePurchase));
 
         StepVerifier.create(ticketPurchaseService.getAllTicketPurchasesByUser("alice"))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("tp-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("tp-1"))
                 .verifyComplete();
     }
 
@@ -246,7 +245,7 @@ class TicketPurchaseServiceTest {
                 .thenReturn(Flux.just(samplePurchase));
 
         StepVerifier.create(ticketPurchaseService.getAllTicketPurchaseByCinema("c-1"))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("tp-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("tp-1"))
                 .verifyComplete();
     }
 
@@ -289,7 +288,7 @@ class TicketPurchaseServiceTest {
 
         StepVerifier.create(ticketPurchaseService.getAllTicketPurchasesByDate(
                         Optional.of("01-12-2025"), Optional.of("10-12-2025")))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("tp-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("tp-1"))
                 .verifyComplete();
     }
 
@@ -301,7 +300,7 @@ class TicketPurchaseServiceTest {
 
         StepVerifier.create(ticketPurchaseService.getAllTicketPurchasesByDate(
                         Optional.of("01-12-2025"), Optional.empty()))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("tp-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("tp-1"))
                 .verifyComplete();
     }
 
@@ -323,7 +322,7 @@ class TicketPurchaseServiceTest {
                 .thenReturn(Flux.just(samplePurchase));
 
         StepVerifier.create(ticketPurchaseService.getAllTicketPurchasesWithMovieId("movie-1"))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("tp-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("tp-1"))
                 .verifyComplete();
     }
 
@@ -343,7 +342,7 @@ class TicketPurchaseServiceTest {
         when(ticketPurchasePort.findAll()).thenReturn(Flux.just(samplePurchase));
 
         StepVerifier.create(ticketPurchaseService.getAllTicketPurchases())
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("tp-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("tp-1"))
                 .verifyComplete();
     }
 }

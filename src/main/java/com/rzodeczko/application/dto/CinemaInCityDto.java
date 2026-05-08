@@ -1,19 +1,31 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.Map;
 
-@Builder
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class CinemaInCityDto {
+public record CinemaInCityDto(
+        String id,
+        Map<String, Integer> cinemaHallsCapacities
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    private String id;
-    private Map<String, Integer> cinemaHallsCapacities;
+    public static class Builder {
+        private String id;
+        private Map<String, Integer> cinemaHallsCapacities;
 
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder cinemaHallsCapacities(Map<String, Integer> cinemaHallsCapacities) {
+            this.cinemaHallsCapacities = cinemaHallsCapacities;
+            return this;
+        }
+
+        public CinemaInCityDto build() {
+            return new CinemaInCityDto(id, cinemaHallsCapacities);
+        }
+    }
 }

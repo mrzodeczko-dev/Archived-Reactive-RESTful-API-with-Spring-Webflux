@@ -6,16 +6,7 @@ import com.rzodeczko.application.dto.TicketPurchaseDto;
 import com.rzodeczko.application.exception.TicketOrderServiceException;
 import com.rzodeczko.application.exception.TicketPurchaseServiceException;
 import com.rzodeczko.application.mapper.TicketPurchaseMapper;
-import com.rzodeczko.application.port.out.CinemaHallPort;
-import com.rzodeczko.application.port.out.CinemaPort;
-import com.rzodeczko.application.port.out.CityPort;
-import com.rzodeczko.application.port.out.MovieEmissionPort;
-import com.rzodeczko.application.port.out.MoviePort;
-import com.rzodeczko.application.port.out.TicketOrderPort;
-import com.rzodeczko.application.port.out.TicketPort;
-import com.rzodeczko.application.port.out.TicketPurchasePort;
-import com.rzodeczko.application.port.out.TransactionPort;
-import com.rzodeczko.application.port.out.UserPort;
+import com.rzodeczko.application.port.out.*;
 import com.rzodeczko.application.validator.CreateTicketPurchaseDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
@@ -83,34 +74,34 @@ public class TicketPurchaseService {
         }
 
         Mono<TicketPurchase> result = movieEmissionPort
-                .findById(createPurchaseDto.getMovieEmissionId())
+                .findById(createPurchaseDto.movieEmissionId())
                 .switchIfEmpty(Mono.error(() -> new TicketOrderServiceException(
-                        "No movie emission with id: %s".formatted(createPurchaseDto.getMovieEmissionId()))))
+                        "No movie emission with id: %s".formatted(createPurchaseDto.movieEmissionId()))))
                 .flatMap(movieEmission ->
                         createPurchaseDto.areAllPositionsAvailable(movieEmission.getFreePositions())
                                 ? Mono.just(movieEmission)
                                 : Mono.error(new TicketOrderServiceException("Positions are not available")))
                 .flatMap(movieEmission -> Mono.zip(
                         movieEmissionPort.addOrUpdate(movieEmission.removeFreePositions(
-                                createPurchaseDto.getTicketsDetails().stream()
-                                        .map(TicketDetailsDto::getPosition)
+                                createPurchaseDto.ticketsDetails().stream()
+                                        .map(TicketDetailsDto::position)
                                         .collect(Collectors.toList()))),
                         principal.flatMap(p -> userPort.findByUsername(p.getName()))
                 ).map(tuple -> TicketPurchase.builder()
                         .purchaseDate(LocalDate.now())
-                        .ticketGroupType(createPurchaseDto.getTicketGroupType())
+                        .ticketGroupType(createPurchaseDto.ticketGroupType())
                         .user(tuple.getT2())
                         .movieEmission(movieEmission)
-                        .tickets(createPurchaseDto.getTicketsDetails()
+                        .tickets(createPurchaseDto.ticketsDetails()
                                 .stream()
                                 .map(ticketDetailsDto -> {
                                     Discount totalDiscount = createPurchaseDto.getBaseDiscount()
-                                            .add(ticketDetailsDto.getIndividualTicketType().getDiscount());
+                                            .add(ticketDetailsDto.individualTicketType().getDiscount());
                                     Money ticketPrice = computeTicketPrice(
                                             movieEmission.getBaseTicketPrice(), totalDiscount);
                                     return Ticket.builder()
-                                            .position(ticketDetailsDto.getPosition())
-                                            .type(ticketDetailsDto.getIndividualTicketType())
+                                            .position(ticketDetailsDto.position())
+                                            .type(ticketDetailsDto.individualTicketType())
                                             .ticketStatus(TicketStatus.PURCHASED)
                                             .discount(totalDiscount)
                                             .price(ticketPrice)
@@ -249,7 +240,7 @@ public class TicketPurchaseService {
         LocalDate fromDate = from.map(s -> LocalDate.parse(s, fmt)).orElse(null);
         LocalDate toDate = to.map(s -> LocalDate.parse(s, fmt)).orElse(null);
 
-        if (fromDate != null && toDate != null && fromDate.compareTo(toDate) > 0) {
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             return Flux.error(new TicketPurchaseServiceException("From date cannot be after to date!"));
         }
 

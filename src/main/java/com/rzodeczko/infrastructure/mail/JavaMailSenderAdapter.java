@@ -39,9 +39,9 @@ public class JavaMailSenderAdapter implements MailPort {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false);
-            helper.setText(mail.getHtmlContent(), true);
-            helper.setTo(mail.getTo());
-            helper.setSubject(mail.getTitle());
+            helper.setText(mail.htmlContent(), true);
+            helper.setTo(mail.to());
+            helper.setSubject(mail.title());
             return mimeMessage;
         } catch (MessagingException e) {
             log.error(e.getMessage(), e);

@@ -9,7 +9,9 @@ public final class TicketMapper {
     }
 
     public static TicketDto toDto(Ticket t) {
-        if (t == null) return null;
+        if (t == null) {
+            return null;
+        }
         return TicketDto.builder()
                 .id(t.getId())
                 .position(t.getPosition())

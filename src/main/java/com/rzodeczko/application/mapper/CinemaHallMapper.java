@@ -13,7 +13,9 @@ public final class CinemaHallMapper {
     }
 
     public static CinemaHallDto toDto(CinemaHall ch) {
-        if (ch == null) return null;
+        if (ch == null) {
+            return null;
+        }
         return CinemaHallDto.builder()
                 .id(ch.getId())
                 .cinemaId(ch.getCinemaId())

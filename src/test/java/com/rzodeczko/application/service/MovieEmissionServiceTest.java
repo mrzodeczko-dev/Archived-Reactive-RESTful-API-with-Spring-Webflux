@@ -6,7 +6,6 @@ import com.rzodeczko.application.port.out.CinemaHallPort;
 import com.rzodeczko.application.port.out.MovieEmissionPort;
 import com.rzodeczko.application.port.out.MoviePort;
 import com.rzodeczko.application.port.out.TransactionPort;
-import com.rzodeczko.application.service.MovieEmissionService;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
 import com.rzodeczko.domain.movie.Movie;
 import com.rzodeczko.domain.movie_emission.MovieEmission;
@@ -158,8 +157,8 @@ class MovieEmissionServiceTest {
 
         StepVerifier.create(movieEmissionService.createMovieEmission(dto))
                 .assertNext(result -> {
-                    assertThat(result.getId()).isEqualTo("emission-1");
-                    assertThat(result.getCinemaHallId()).isEqualTo("hall-1");
+                    assertThat(result.id()).isEqualTo("emission-1");
+                    assertThat(result.cinemaHallId()).isEqualTo("hall-1");
                 })
                 .verifyComplete();
     }
@@ -175,7 +174,7 @@ class MovieEmissionServiceTest {
         when(movieEmissionRepository.findAll()).thenReturn(Flux.just(emission));
 
         StepVerifier.create(movieEmissionService.getAllMovieEmissions())
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("e-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("e-1"))
                 .verifyComplete();
     }
 
@@ -228,7 +227,7 @@ class MovieEmissionServiceTest {
         when(cinemaHallRepository.addOrUpdate(any(CinemaHall.class))).thenReturn(Mono.just(hall));
 
         StepVerifier.create(movieEmissionService.deleteMovieEmission("e-1"))
-                .assertNext(dto -> assertThat(dto.getId()).isEqualTo("e-1"))
+                .assertNext(dto -> assertThat(dto.id()).isEqualTo("e-1"))
                 .verifyComplete();
     }
 }

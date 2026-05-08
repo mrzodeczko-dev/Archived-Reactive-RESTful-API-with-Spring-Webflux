@@ -7,7 +7,6 @@ import com.rzodeczko.application.port.out.CinemaHallPort;
 import com.rzodeczko.application.port.out.CinemaPort;
 import com.rzodeczko.application.port.out.CityPort;
 import com.rzodeczko.application.port.out.TransactionPort;
-import com.rzodeczko.application.service.CinemaService;
 import com.rzodeczko.application.validator.CreateCinemaDtoValidator;
 import com.rzodeczko.domain.cinema.Cinema;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
@@ -84,8 +83,8 @@ class CinemaServiceTest {
 
             StepVerifier.create(cinemaService.addCinema(dto))
                     .assertNext(result -> {
-                        assertThat(result.getId()).isEqualTo("cinema-1");
-                        assertThat(result.getStreet()).isEqualTo("Main St");
+                        assertThat(result.id()).isEqualTo("cinema-1");
+                        assertThat(result.street()).isEqualTo("Main St");
                     })
                     .verifyComplete();
         }
@@ -138,8 +137,8 @@ class CinemaServiceTest {
             when(cinemaRepository.findAll()).thenReturn(Flux.just(cinema, cinema2));
 
             StepVerifier.create(cinemaService.getAll())
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("cinema-1"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("cinema-2"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("cinema-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("cinema-2"))
                     .verifyComplete();
         }
 
@@ -161,7 +160,7 @@ class CinemaServiceTest {
             when(cinemaRepository.findAllByCity("Warsaw")).thenReturn(Flux.just(cinema));
 
             StepVerifier.create(cinemaService.getAllByCity("Warsaw"))
-                    .assertNext(dto -> assertThat(dto.getId()).isEqualTo("cinema-1"))
+                    .assertNext(dto -> assertThat(dto.id()).isEqualTo("cinema-1"))
                     .verifyComplete();
         }
 
@@ -206,7 +205,7 @@ class CinemaServiceTest {
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cinemaService.addCinemaHallToCinema("cinema-1", dto))
-                    .assertNext(result -> assertThat(result.getId()).isEqualTo("cinema-1"))
+                    .assertNext(result -> assertThat(result.id()).isEqualTo("cinema-1"))
                     .verifyComplete();
         }
 

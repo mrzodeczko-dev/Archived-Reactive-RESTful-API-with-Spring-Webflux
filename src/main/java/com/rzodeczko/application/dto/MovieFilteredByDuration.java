@@ -1,16 +1,29 @@
 package com.rzodeczko.application.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public record MovieFilteredByDuration(
+        Integer minDuration,
+        Integer maxDuration
+) {
+    public static Builder builder() {
+        return new Builder();
+    }
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class MovieFilteredByDuration {
+    public static class Builder {
+        private Integer minDuration;
+        private Integer maxDuration;
 
-    private Integer minDuration;
-    private Integer maxDuration;
+        public Builder minDuration(Integer minDuration) {
+            this.minDuration = minDuration;
+            return this;
+        }
+
+        public Builder maxDuration(Integer maxDuration) {
+            this.maxDuration = maxDuration;
+            return this;
+        }
+
+        public MovieFilteredByDuration build() {
+            return new MovieFilteredByDuration(minDuration, maxDuration);
+        }
+    }
 }
