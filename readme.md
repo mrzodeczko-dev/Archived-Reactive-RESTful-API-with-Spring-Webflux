@@ -324,7 +324,7 @@ The full surface is defined as functional `RouterFunction` beans in `com.rzodecz
 The repository ships with a `.env.example` template listing every variable that `docker-compose.yml` and `application.yml` consume. Copy it to `.env` next to `docker-compose.yml` and fill in real values:
 
 ```bash
-cp .env.example .env
+cp .env.sample .env
 # then edit .env and replace the placeholder values
 ```
 

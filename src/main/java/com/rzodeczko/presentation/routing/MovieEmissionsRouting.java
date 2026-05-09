@@ -22,7 +22,7 @@ public class MovieEmissionsRouting extends BaseJsonRouter {
             @RouterOperation(method = RequestMethod.GET, path = "/movieEmissions/cinemaHallId/{cinemaHallId}", beanClass = MovieEmissionsHandler.class, beanMethod = "getAllMovieEmissionsByCinemaHallId"),
             @RouterOperation(method = RequestMethod.DELETE, path = "/movieEmissions/{id}", beanClass = MovieEmissionsHandler.class, beanMethod = "deleteMovieEmissionById")
     })
-    public RouterFunction<ServerResponse> movieEmissionsRouting(MovieEmissionsHandler movieEmissionsHandler) {
+    public RouterFunction<ServerResponse> movieEmissionsRouterFunction(MovieEmissionsHandler movieEmissionsHandler) {
         return route()
                 .path("/movieEmissions", builder -> builder
                         .nest(jsonAccept(), nested -> nested

@@ -21,7 +21,7 @@ public class UsersRouting extends BaseJsonRouter {
             @RouterOperation(path = "/users/username/{username}", method = RequestMethod.GET, beanClass = UsersHandler.class, beanMethod = "getByUsername"),
             @RouterOperation(path = "/users/promoteToAdmin/username/{username}", method = RequestMethod.POST, beanClass = UsersHandler.class, beanMethod = "promoteUserToAdminRole")
     })
-    public RouterFunction<ServerResponse> usersRoute(UsersHandler usersHandler) {
+    public RouterFunction<ServerResponse> usersRouterFunction(UsersHandler usersHandler) {
         return route()
                 .POST("/register", jsonAccept(), usersHandler::register)
                 .path("/users", builder -> builder

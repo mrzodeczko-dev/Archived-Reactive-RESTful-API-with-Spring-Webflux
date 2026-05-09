@@ -19,7 +19,7 @@ public class EmailRouting extends BaseJsonRouter {
             @RouterOperation(method = RequestMethod.POST, path = "/emails/send/single", beanClass = EmailHandler.class, beanMethod = "sendSingleEmail"),
             @RouterOperation(method = RequestMethod.POST, path = "/emails/send/multiple", beanClass = EmailHandler.class, beanMethod = "sendMultipleEmails")
     })
-    public RouterFunction<ServerResponse> emailsRoute(EmailHandler emailHandler) {
+    public RouterFunction<ServerResponse> emailsRouterFunction(EmailHandler emailHandler) {
         return route()
                 .path("/emails", builder -> builder
                         .nest(jsonAccept(), nested -> nested

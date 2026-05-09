@@ -21,7 +21,7 @@ public class CinemasRouting extends BaseJsonRouter {
             @RouterOperation(method = RequestMethod.GET, path = "/cinemas/city/{city}", beanClass = CinemasHandler.class, beanMethod = "getAllCinemasByCity"),
             @RouterOperation(method = RequestMethod.PUT, path = "/cinemas/id/{id}/addCinemaHall", beanClass = CinemasHandler.class, beanMethod = "addCinemaHall")
     })
-    public RouterFunction<ServerResponse> cinemasRouting(CinemasHandler cinemasHandler) {
+    public RouterFunction<ServerResponse> cinemasRouterFunction(CinemasHandler cinemasHandler) {
         return route()
                 .path("/cinemas", builder -> builder
                         .nest(jsonAccept(), nested -> nested

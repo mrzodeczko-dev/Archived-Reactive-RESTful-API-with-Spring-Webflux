@@ -18,7 +18,7 @@ public class LoginRouting extends BaseJsonRouter {
     @RouterOperations({
             @RouterOperation(path = "/login", method = RequestMethod.POST, beanClass = LoginHandler.class, beanMethod = "login")
     })
-    public RouterFunction<ServerResponse> loginRoute(LoginHandler loginHandler) {
+    public RouterFunction<ServerResponse> loginRouterFunction(LoginHandler loginHandler) {
         return route()
                 .POST("/login", jsonAccept(), loginHandler::login)
                 .build();

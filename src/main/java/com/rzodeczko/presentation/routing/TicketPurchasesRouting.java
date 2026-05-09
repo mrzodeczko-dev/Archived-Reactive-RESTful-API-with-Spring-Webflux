@@ -29,7 +29,7 @@ public class TicketPurchasesRouting extends BaseJsonRouter {
             @RouterOperation(method = RequestMethod.GET, path = "/ticketPurchases/movieId/{movieId}", beanClass = TicketPurchaseHandler.class, beanMethod = "getAllTicketPurchasesWithMovieIdForLoggedUser"),
             @RouterOperation(method = RequestMethod.GET, path = "/admin/ticketPurchases/cinemaHallId/{cinemaHallId}", beanClass = TicketPurchaseHandler.class, beanMethod = "getAllTicketPurchasesByCinemaHallId")
     })
-    public RouterFunction<ServerResponse> ticketPurchasesRouting(TicketPurchaseHandler ticketPurchaseHandler) {
+    public RouterFunction<ServerResponse> ticketPurchasesRouterFunction(TicketPurchaseHandler ticketPurchaseHandler) {
         return route()
                 .path("/ticketPurchases", builder -> builder
                         .nest(jsonAccept(), nested -> nested

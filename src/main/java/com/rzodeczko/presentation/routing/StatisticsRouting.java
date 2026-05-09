@@ -23,7 +23,7 @@ public class StatisticsRouting extends BaseJsonRouter {
             @RouterOperation(method = RequestMethod.GET, path = "/statistics/movies/mostPopularGroupedByGenre/byCity/{city}", beanClass = StatisticsHandler.class, beanMethod = "findMostPopularMoviesGroupedByGenreInCity"),
             @RouterOperation(method = RequestMethod.GET, path = "/statistics/averageTicketPrice", beanClass = StatisticsHandler.class, beanMethod = "getAverageTicketPriceGroupedByCity")
     })
-    public RouterFunction<ServerResponse> statisticsRouting(StatisticsHandler statisticsHandler) {
+    public RouterFunction<ServerResponse> statisticsRouterFunction(StatisticsHandler statisticsHandler) {
         return route()
                 .path("/statistics", builder -> builder
                         .nest(jsonAccept(), nested -> nested

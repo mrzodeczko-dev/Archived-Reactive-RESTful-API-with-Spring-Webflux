@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
@@ -30,7 +29,7 @@ public class MoviesRouting extends BaseJsonRouter {
             @RouterOperation(method = RequestMethod.POST, path = "/movies/csv", beanClass = MoviesHandler.class, beanMethod = "addMovieToDatabaseWithCsvFile"),
             @RouterOperation(method = RequestMethod.GET, path = "/movies/favorites", beanClass = MoviesHandler.class, beanMethod = "getFavoriteMovies")
     })
-    public RouterFunction<ServerResponse> moviesRoute(MoviesHandler moviesHandler) {
+    public RouterFunction<ServerResponse> moviesRouterFunction(MoviesHandler moviesHandler) {
         return route()
                 .path("/movies", builder -> builder
                         .nest(jsonAccept(), nested -> nested

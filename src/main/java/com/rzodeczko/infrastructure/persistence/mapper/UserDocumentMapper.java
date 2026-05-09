@@ -4,7 +4,6 @@ import com.rzodeczko.domain.movie.Movie;
 import com.rzodeczko.domain.security.Admin;
 import com.rzodeczko.domain.security.BaseUser;
 import com.rzodeczko.domain.security.User;
-import com.rzodeczko.domain.security.enums.Role;
 import com.rzodeczko.infrastructure.persistence.document.MovieDocument;
 import com.rzodeczko.infrastructure.persistence.document.UserDocument;
 
@@ -46,7 +45,9 @@ public final class UserDocumentMapper {
     }
 
     public static User toUserDomain(UserDocument doc) {
-        if (doc == null) return null;
+        if (doc == null) {
+            return null;
+        }
         User u = User.builder()
                 .username(doc.getUsername())
                 .password(doc.getPassword())
@@ -54,6 +55,9 @@ public final class UserDocumentMapper {
                 .birthDate(doc.getBirthDate())
                 .build();
         u.setId(doc.getId());
+        if (doc.getRole() != null) {
+            u.setRole(doc.getRole());
+        }
         if (doc.getFavoriteMovies() != null) {
             for (Movie m : toDomainMovies(doc.getFavoriteMovies())) {
                 u.addMovieToFavorites(m);
@@ -63,25 +67,25 @@ public final class UserDocumentMapper {
     }
 
     public static Admin toAdminDomain(UserDocument doc) {
-        if (doc == null) return null;
+        if (doc == null) {
+            return null;
+        }
         Admin a = new Admin(doc.getUsername(), doc.getPassword());
         a.setId(doc.getId());
         return a;
     }
 
-    public static BaseUser toBaseUserDomain(UserDocument doc) {
-        if (doc == null) return null;
-        if (doc.getRole() == Role.ROLE_ADMIN) return toAdminDomain(doc);
-        return toUserDomain(doc);
-    }
-
     private static List<MovieDocument> toDocs(List<Movie> movies) {
-        if (movies == null) return null;
+        if (movies == null) {
+            return null;
+        }
         return movies.stream().map(MovieDocumentMapper::toDocument).collect(Collectors.toList());
     }
 
     private static List<Movie> toDomainMovies(List<MovieDocument> docs) {
-        if (docs == null) return null;
+        if (docs == null) {
+            return null;
+        }
         return docs.stream().map(MovieDocumentMapper::toDomain).collect(Collectors.toList());
     }
 }

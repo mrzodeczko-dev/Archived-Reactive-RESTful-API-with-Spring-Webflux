@@ -1,40 +1,40 @@
 services:
   mongo1:
     image: mongo:8.3.1
-    container_name: mongo1
-    hostname: mongo1
+    container_name: ${MONGO1_HOST}
+    hostname: ${MONGO1_HOST}
     restart: unless-stopped
-    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017" ]
+    command: [ "mongod", "--replSet", "${RS_NAME}", "--bind_ip_all", "--port", "${MONGO_PORT}" ]
     volumes:
       - ./data/mongo-1:/data/db
     ports:
-      - "${MONGO1_PORT}:${MONGO1_PORT}"
+      - "${MONGO1_HOST_PORT}:${MONGO_PORT}"
     networks:
       - net
 
   mongo2:
     image: mongo:8.3.1
-    container_name: mongo2
-    hostname: mongo2
+    container_name: ${MONGO2_HOST}
+    hostname: ${MONGO2_HOST}
     restart: unless-stopped
-    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27018" ]
+    command: [ "mongod", "--replSet", "${RS_NAME}", "--bind_ip_all", "--port", "${MONGO_PORT}" ]
     volumes:
       - ./data/mongo-2:/data/db
     ports:
-      - "${MONGO2_PORT}:${MONGO2_PORT}"
+      - "${MONGO2_HOST_PORT}:${MONGO_PORT}"
     networks:
       - net
 
   mongo3:
     image: mongo:8.3.1
-    container_name: mongo3
-    hostname: mongo3
+    container_name: ${MONGO3_HOST}
+    hostname: ${MONGO3_HOST}
     restart: unless-stopped
-    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27019" ]
+    command: [ "mongod", "--replSet", "${RS_NAME}", "--bind_ip_all", "--port", "${MONGO_PORT}" ]
     volumes:
       - ./data/mongo-3:/data/db
     ports:
-      - "${MONGO3_PORT}:${MONGO3_PORT}"
+      - "${MONGO3_HOST_PORT}:${MONGO_PORT}"
     networks:
       - net
 
@@ -46,35 +46,57 @@ services:
       - mongo1
       - mongo2
       - mongo3
+    environment:
+      RS_NAME: ${RS_NAME}
+      MONGO1_HOST: ${MONGO1_HOST}
+      MONGO2_HOST: ${MONGO2_HOST}
+      MONGO3_HOST: ${MONGO3_HOST}
+      MONGO_PORT: ${MONGO_PORT}
     entrypoint:
       - bash
       - -lc
       - |
+        set -e
+
         echo "Waiting for Mongo nodes..."
-        until mongosh --host mongo1 --port 27017 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
-        until mongosh --host mongo2 --port 27018 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
-        until mongosh --host mongo3 --port 27019 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
+        for host in "$$MONGO1_HOST" "$$MONGO2_HOST" "$$MONGO3_HOST"; do
+          until mongosh --host "$$host" --port "$$MONGO_PORT" --eval "db.runCommand({ping:1})" >/dev/null 2>&1; do
+            sleep 2
+          done
+        done
 
-        echo "Initializing replica set if needed..."
-        mongosh --host mongo1 --port 27017 --eval '
-          try {
-            rs.status();
-            print("Replica set already initialized");
-          } catch (e) {
-            rs.initiate({
-              _id: "rs0",
-              members: [
-                { _id: 0, host: "mongo1:27017" },
-                { _id: 1, host: "mongo2:27018" },
-                { _id: 2, host: "mongo3:27019" }
-              ]
-            });
+        echo "Configuring replica set..."
+        mongosh --host "$$MONGO1_HOST" --port "$$MONGO_PORT" --eval "
+          const desired = {
+            _id: '$$RS_NAME',
+            members: [
+              { _id: 0, host: '$$MONGO1_HOST:$$MONGO_PORT' },
+              { _id: 1, host: '$$MONGO2_HOST:$$MONGO_PORT' },
+              { _id: 2, host: '$$MONGO3_HOST:$$MONGO_PORT' }
+            ]
+          };
+          let status;
+          try { status = rs.status(); } catch (e) { status = null; }
+          if (!status || status.codeName === 'NotYetInitialized') {
+            print('Initiating replica set...');
+            rs.initiate(desired);
+          } else {
+            const current = rs.conf().members.map(m => m.host).sort().join(',');
+            const want    = desired.members.map(m => m.host).sort().join(',');
+            if (current !== want) {
+              print('Reconfiguring replica set members (current=' + current + ', want=' + want + ')...');
+              const cfg = rs.conf();
+              cfg.members = desired.members;
+              rs.reconfig(cfg, { force: true });
+            } else {
+              print('Replica set already configured correctly');
+            }
           }
-        '
+        "
 
-        echo "Waiting for replica set connection..."
-        until mongosh "mongodb://mongo1:27017,mongo2:27018,mongo3:27019/?replicaSet=rs0" \
-          --eval "db.adminCommand({ ping: 1 })" >/dev/null 2>&1; do
+        echo "Waiting for primary election..."
+        until mongosh "mongodb://$$MONGO1_HOST:$$MONGO_PORT,$$MONGO2_HOST:$$MONGO_PORT,$$MONGO3_HOST:$$MONGO_PORT/?replicaSet=$$RS_NAME" \
+          --eval "db.adminCommand({ping:1})" >/dev/null 2>&1; do
           sleep 2
         done
 
@@ -89,7 +111,7 @@ services:
     container_name: app
     restart: on-failure:5
     healthcheck:
-      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:${APP_PORT}/actuator/health" ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -97,10 +119,16 @@ services:
     depends_on:
       mongo-init:
         condition: service_completed_successfully
-
     ports:
-      - "8080:8080"
+      - "${APP_PORT}:${APP_PORT}"
     environment:
+      - APP_PORT=${APP_PORT}
+      - MONGO1_HOST=${MONGO1_HOST}
+      - MONGO2_HOST=${MONGO2_HOST}
+      - MONGO3_HOST=${MONGO3_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - RS_NAME=${RS_NAME}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - ADMIN_USERNAME=${ADMIN_USERNAME}

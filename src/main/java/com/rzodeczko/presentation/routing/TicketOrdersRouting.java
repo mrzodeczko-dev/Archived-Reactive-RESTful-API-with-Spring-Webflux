@@ -20,7 +20,7 @@ public class TicketOrdersRouting extends BaseJsonRouter {
             @RouterOperation(path = "/ticketsOrders/cancel/orderId/{orderId}", method = RequestMethod.PUT, beanClass = TicketOrderHandler.class, beanMethod = "cancelOrder"),
             @RouterOperation(path = "/ticketsOrders/username", method = RequestMethod.GET, beanClass = TicketOrderHandler.class, beanMethod = "getAllTicketOrdersByUsername")
     })
-    public RouterFunction<ServerResponse> ticketOrdersRouting(TicketOrderHandler ticketOrderHandler) {
+    public RouterFunction<ServerResponse> ticketOrdersRouterFunction(TicketOrderHandler ticketOrderHandler) {
         return route()
                 .POST("/ticketOrders", jsonAccept(), ticketOrderHandler::orderTickets)
                 .path("/ticketsOrders", builder -> builder
