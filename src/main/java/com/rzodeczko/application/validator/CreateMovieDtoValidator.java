@@ -54,8 +54,7 @@ public class CreateMovieDtoValidator implements Validator<CreateMovieDto, String
     }
 
     private boolean isMovieDurationValid(Integer duration) {
-
-        return nonNull(duration) && duration >= 1 && duration <= 5;
+        return nonNull(duration) && duration >= 30 && duration <= 300;
     }
 
     private boolean isMovieNameValid(String name) {

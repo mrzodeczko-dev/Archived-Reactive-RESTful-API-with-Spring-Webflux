@@ -3,7 +3,8 @@ server:
 
 spring:
   mongodb:
-    uri: mongodb://mongo1:${MONGO1_PORT:30001},mongo2:${MONGO2_PORT:30002},mongo3:${MONGO3_PORT:30003}/cinema_db?replicaSet=rs0
+    uri: mongodb://mongo1:${MONGO1_PORT:27017},mongo2:${MONGO2_PORT:27018},mongo3:${MONGO3_PORT:27019}/cinema_db?replicaSet=rs0
+    auto-index-creation: true
 
   mail:
     host: smtp.gmail.com
@@ -20,7 +21,10 @@ spring:
     max-in-memory-size: 5MB
 
 mongock:
-  migration-scan-package: com.app.infrastructure.mongo.initscripts
+  enabled: true
+  runner-type: InitializingBean
+  migration-scan-package:
+    - com.app.infrastructure.persistence.initscripts
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
@@ -45,7 +49,7 @@ springdoc:
 
 
 adminusername: ${ADMIN_USERNAME:admin}
-adminpassword: ${ADMIN_PASSWORD:admin}
+adminpassword: ${ADMIN_PASSWORD:admin123}
 
 
 management:

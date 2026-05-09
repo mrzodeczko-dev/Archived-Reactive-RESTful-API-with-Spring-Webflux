@@ -6,13 +6,14 @@ import com.rzodeczko.application.exception.MovieServiceException;
 import com.rzodeczko.application.mapper.MovieMapper;
 import com.rzodeczko.application.port.out.MovieCsvParserPort;
 import com.rzodeczko.application.port.out.MoviePort;
+import com.rzodeczko.application.port.out.TransactionPort;
 import com.rzodeczko.application.port.out.UserPort;
 import com.rzodeczko.application.validator.CreateMovieDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
 import com.rzodeczko.domain.movie.Movie;
 import com.rzodeczko.domain.security.User;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,18 +30,23 @@ import static java.util.Objects.nonNull;
 
 public class MovieService {
 
-    private static final Logger log = LogManager.getLogger(MovieService.class);
+    private static final Logger log = LoggerFactory.getLogger(MovieService.class);
 
     private final MoviePort moviePort;
     private final UserPort userPort;
     private final CreateMovieDtoValidator createMovieDtoValidator;
     private final MovieCsvParserPort movieCsvParserPort;
+    private final TransactionPort transactionPort;
 
-    public MovieService(MoviePort moviePort, UserPort userPort, CreateMovieDtoValidator createMovieDtoValidator, MovieCsvParserPort movieCsvParserPort) {
+    public MovieService(MoviePort moviePort, UserPort userPort,
+                        CreateMovieDtoValidator createMovieDtoValidator,
+                        MovieCsvParserPort movieCsvParserPort,
+                        TransactionPort transactionPort) {
         this.moviePort = moviePort;
         this.userPort = userPort;
         this.createMovieDtoValidator = createMovieDtoValidator;
         this.movieCsvParserPort = movieCsvParserPort;
+        this.transactionPort = transactionPort;
     }
 
     public Flux<MovieDto> getAll() {
@@ -119,18 +125,25 @@ public class MovieService {
     }
 
     public Mono<MovieDto> addMovieToFavorites(final String movieId, final String username) {
-        return moviePort.findById(movieId)
-                .switchIfEmpty(Mono.error(() -> new MovieServiceException("No movie with id: %s".formatted(movieId))))
+        Mono<Movie> result = moviePort.findById(movieId)
+                .switchIfEmpty(Mono.error(() -> new MovieServiceException(
+                        "No movie with id: %s".formatted(movieId))))
                 .flatMap(movie -> userPort.findByUsername(username)
+                        .switchIfEmpty(Mono.error(() -> new MovieServiceException(
+                                "No user with username: %s".formatted(username))))
                         .flatMap(user -> {
-                            if (nonNull(user.getFavoriteMovies()) && user.getFavoriteMovies().stream().map(Movie::getId).anyMatch(id -> id.equals(movieId))) {
-                                return Mono.error(new MovieServiceException("Movie with id: %s is already in favorites movies".formatted(movieId)));
+                            if (nonNull(user.getFavoriteMovies())
+                                    && user.getFavoriteMovies().stream()
+                                    .map(Movie::getId)
+                                    .anyMatch(id -> id.equals(movieId))) {
+                                return Mono.error(new MovieServiceException(
+                                        "Movie with id: %s is already in favorites movies".formatted(movieId)));
                             }
-                            return Mono.just(user.addMovieToFavorites(movie));
-                        })
-                        .flatMap(userPort::addOrUpdate)
-                        .then(Mono.just(MovieMapper.toDto(movie)))
-                );
+                            return userPort.addOrUpdate(user.addMovieToFavorites(movie))
+                                    .thenReturn(movie);
+                        }));
+
+        return transactionPort.inTransaction(result).map(MovieMapper::toDto);
     }
 
     public Mono<MovieDto> getById(final String id) {

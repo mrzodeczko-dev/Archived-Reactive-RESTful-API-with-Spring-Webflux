@@ -3,6 +3,7 @@ package com.rzodeczko.application.service;
 import com.rzodeczko.application.dto.CreateMovieDto;
 import com.rzodeczko.application.exception.MovieServiceException;
 import com.rzodeczko.application.port.out.MoviePort;
+import com.rzodeczko.application.port.out.TransactionPort;
 import com.rzodeczko.application.port.out.UserPort;
 import com.rzodeczko.application.validator.CreateMovieDtoValidator;
 import com.rzodeczko.domain.movie.Movie;
@@ -38,6 +39,8 @@ class MovieServiceTest {
     private UserPort userRepository;
     @Mock
     private CreateMovieDtoValidator createMovieDtoValidator;
+    @Mock
+    private TransactionPort transactionPort;
 
     @InjectMocks
     private MovieService movieService;
@@ -336,6 +339,8 @@ class MovieServiceTest {
             when(movieRepository.findById("movie-1")).thenReturn(Mono.just(drama2026));
             when(userRepository.findByUsername("jan@example.com")).thenReturn(Mono.just(user));
             when(userRepository.addOrUpdate(any())).thenReturn(Mono.just(user));
+            when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
+
 
             StepVerifier.create(movieService.addMovieToFavorites("movie-1", "jan@example.com"))
                     .assertNext(dto -> assertThat(dto.id()).isEqualTo("movie-1"))
@@ -346,6 +351,7 @@ class MovieServiceTest {
         @DisplayName("Movie not found: MovieServiceException with movie id")
         void shouldThrowWhenMovieNotFound() {
             when(movieRepository.findById("missing")).thenReturn(Mono.empty());
+            when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(movieService.addMovieToFavorites("missing", "jan@example.com"))
                     .expectErrorSatisfies(ex -> {
@@ -363,6 +369,8 @@ class MovieServiceTest {
 
             when(movieRepository.findById("movie-1")).thenReturn(Mono.just(drama2026));
             when(userRepository.findByUsername("jan@example.com")).thenReturn(Mono.just(user));
+            when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
+
 
             StepVerifier.create(movieService.addMovieToFavorites("movie-1", "jan@example.com"))
                     .expectErrorSatisfies(ex -> {

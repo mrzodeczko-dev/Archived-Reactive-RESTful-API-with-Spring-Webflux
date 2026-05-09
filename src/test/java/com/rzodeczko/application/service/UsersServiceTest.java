@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.verification.VerificationMode;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -197,16 +198,15 @@ class UsersServiceTest {
             Admin admin = new Admin("jan@example.com", "hashed-pass");
 
             when(userPort.findByUsername("jan@example.com")).thenReturn(Mono.just(userJan));
-            when(userPort.deleteById(userJan.getId())).thenReturn(Mono.just(userJan));
-            when(adminPort.addOrUpdate(any())).thenReturn(Mono.just(admin));
+            when(userPort.addOrUpdate(any())).thenReturn(Mono.just(userJan));
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(usersService.promoteUserToAdminRole("jan@example.com"))
                     .assertNext(dto -> assertThat(dto.username()).isEqualTo("jan@example.com"))
                     .verifyComplete();
 
-            verify(userPort).deleteById(userJan.getId());
-            verify(adminPort).addOrUpdate(any());
+            verify(userPort).addOrUpdate(any());
+            verify(userPort, times(0)).deleteById(any());
         }
 
         @Test
@@ -230,8 +230,7 @@ class UsersServiceTest {
         void shouldWrapInTransaction() {
             Admin admin = new Admin("jan@example.com", "hashed-pass");
             when(userPort.findByUsername("jan@example.com")).thenReturn(Mono.just(userJan));
-            when(userPort.deleteById(userJan.getId())).thenReturn(Mono.just(userJan));
-            when(adminPort.addOrUpdate(any())).thenReturn(Mono.just(admin));
+            when(userPort.addOrUpdate(any())).thenReturn(Mono.just(userJan));
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(usersService.promoteUserToAdminRole("jan@example.com"))

@@ -40,8 +40,8 @@ public class AppRouting {
 
     @Bean
     @RouterOperations({
-            @RouterOperation(path = "/emails/send/single", beanClass = EmailHandler.class, beanMethod = "sendSingleEmail"),
-            @RouterOperation(path = "/emails/send/multiple", beanClass = EmailHandler.class, beanMethod = "sendMultipleEmails")
+            @RouterOperation(method = RequestMethod.POST, path = "/emails/send/single", beanClass = EmailHandler.class, beanMethod = "sendSingleEmail"),
+            @RouterOperation(method = RequestMethod.POST, path = "/emails/send/multiple", beanClass = EmailHandler.class, beanMethod = "sendMultipleEmails")
     })
     public RouterFunction<ServerResponse> emailsRoute(EmailHandler emailHandler) {
         return route(POST("/emails/send/single").and(accept(MediaType.APPLICATION_JSON)), emailHandler::sendSingleEmail)

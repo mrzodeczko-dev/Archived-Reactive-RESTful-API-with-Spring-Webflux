@@ -4,7 +4,7 @@ services:
     container_name: mongo1
     hostname: mongo1
     restart: unless-stopped
-    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30001" ]
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017" ]
     volumes:
       - ./data/mongo-1:/data/db
     ports:
@@ -17,7 +17,7 @@ services:
     container_name: mongo2
     hostname: mongo2
     restart: unless-stopped
-    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30002" ]
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27018" ]
     volumes:
       - ./data/mongo-2:/data/db
     ports:
@@ -30,7 +30,7 @@ services:
     container_name: mongo3
     hostname: mongo3
     restart: unless-stopped
-    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "30003" ]
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27019" ]
     volumes:
       - ./data/mongo-3:/data/db
     ports:
@@ -51,12 +51,12 @@ services:
       - -lc
       - |
         echo "Waiting for Mongo nodes..."
-        until mongosh --host mongo1 --port 30001 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
-        until mongosh --host mongo2 --port 30002 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
-        until mongosh --host mongo3 --port 30003 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
+        until mongosh --host mongo1 --port 27017 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
+        until mongosh --host mongo2 --port 27018 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
+        until mongosh --host mongo3 --port 27019 --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; do sleep 2; done
 
         echo "Initializing replica set if needed..."
-        mongosh --host mongo1 --port 30001 --eval '
+        mongosh --host mongo1 --port 27017 --eval '
           try {
             rs.status();
             print("Replica set already initialized");
@@ -64,16 +64,16 @@ services:
             rs.initiate({
               _id: "rs0",
               members: [
-                { _id: 0, host: "mongo1:30001" },
-                { _id: 1, host: "mongo2:30002" },
-                { _id: 2, host: "mongo3:30003" }
+                { _id: 0, host: "mongo1:27017" },
+                { _id: 1, host: "mongo2:27018" },
+                { _id: 2, host: "mongo3:27019" }
               ]
             });
           }
         '
 
         echo "Waiting for replica set connection..."
-        until mongosh "mongodb://mongo1:30001,mongo2:30002,mongo3:30003/?replicaSet=rs0" \
+        until mongosh "mongodb://mongo1:27017,mongo2:27018,mongo3:27019/?replicaSet=rs0" \
           --eval "db.adminCommand({ ping: 1 })" >/dev/null 2>&1; do
           sleep 2
         done
@@ -105,6 +105,7 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     networks:
       - net
 

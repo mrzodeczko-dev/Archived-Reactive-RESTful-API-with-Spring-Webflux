@@ -88,7 +88,7 @@ public class MovieEmissionService {
                                                     .collect(Collectors.toMap(
                                                             Function.identity(),
                                                             position -> true,
-                                                            (old, newVal) -> old,
+                                                            (old, _) -> old,
                                                             LinkedHashMap::new)))
                                             .build())
                             .map(movieEmission -> Pair.of(pair.getLeft(), movieEmission));
@@ -125,7 +125,7 @@ public class MovieEmissionService {
                 })
                 .collect(Collectors.toList());
 
-        var endDateTime = startDateTime.plusHours(movie.getDuration());
+        var endDateTime = startDateTime.plusMinutes(movie.getDuration());
         var movieInterval = new Interval(
                 startDateTime.toEpochSecond(ZoneOffset.UTC) * 1000,
                 endDateTime.toEpochSecond(ZoneOffset.UTC) * 1000);
@@ -134,29 +134,6 @@ public class MovieEmissionService {
                 .findGaps(bookedTimeSpace, dayToInterval(startDateTime.toLocalDate()))
                 .stream()
                 .anyMatch(interval -> interval.contains(movieInterval));
-    }
-
-    private Interval dayToInterval(LocalDate date) {
-        return new Interval(
-                date.atTime(0, 0).toEpochSecond(ZoneOffset.UTC) * 1000,
-                date.plusDays(1).atTime(0, 0).toEpochSecond(ZoneOffset.UTC) * 1000);
-    }
-
-    private List<Interval> getMovieEmissionTimesInDay(LocalDate date, CinemaHall cinemaHall) {
-        return cinemaHall.getMovieEmissions()
-                .stream()
-                .filter(movieEmission -> movieEmission.getStartDateTime().toLocalDate().isEqual(date))
-                .sorted(Comparator.comparing(MovieEmission::getStartDateTime))
-                .map(movieEmission -> new Interval(
-                        movieEmission.getStartDateTime().toEpochSecond(ZoneOffset.UTC) * 1000,
-                        movieEmission.getStartDateTime()
-                                .plusHours(movieEmission.getMovie().getDuration())
-                                .toEpochSecond(ZoneOffset.UTC) * 1000))
-                .collect(Collectors.toList());
-    }
-
-    private LocalDateTime toLocalDateTime(String stringValue) {
-        return LocalDateTime.from(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").parse(stringValue));
     }
 
     public Flux<MovieEmissionDto> getAllMovieEmissions() {
@@ -188,5 +165,28 @@ public class MovieEmissionService {
                                 .addOrUpdate(cinemaHall.removeMovieEmissionById(movieEmission.getId()))
                                 .then(Mono.just(movieEmission))));
         return transactionPort.inTransaction(result).map(MovieEmissionMapper::toDto);
+    }
+
+    private LocalDateTime toLocalDateTime(String stringValue) {
+        return LocalDateTime.from(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").parse(stringValue));
+    }
+
+    private Interval dayToInterval(LocalDate date) {
+        return new Interval(
+                date.atTime(0, 0).toEpochSecond(ZoneOffset.UTC) * 1000,
+                date.plusDays(1).atTime(0, 0).toEpochSecond(ZoneOffset.UTC) * 1000);
+    }
+
+    private List<Interval> getMovieEmissionTimesInDay(LocalDate date, CinemaHall cinemaHall) {
+        return cinemaHall.getMovieEmissions()
+                .stream()
+                .filter(movieEmission -> movieEmission.getStartDateTime().toLocalDate().isEqual(date))
+                .sorted(Comparator.comparing(MovieEmission::getStartDateTime))
+                .map(movieEmission -> new Interval(
+                        movieEmission.getStartDateTime().toEpochSecond(ZoneOffset.UTC) * 1000,
+                        movieEmission.getStartDateTime()
+                                .plusMinutes(movieEmission.getMovie().getDuration())
+                                .toEpochSecond(ZoneOffset.UTC) * 1000))
+                .collect(Collectors.toList());
     }
 }

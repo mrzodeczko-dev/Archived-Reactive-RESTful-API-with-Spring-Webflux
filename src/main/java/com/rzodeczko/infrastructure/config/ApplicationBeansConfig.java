@@ -4,11 +4,13 @@ import com.rzodeczko.application.port.out.*;
 import com.rzodeczko.application.service.*;
 import com.rzodeczko.application.validator.*;
 import com.rzodeczko.infrastructure.csv.CsvMovieParserAdapter;
+import com.rzodeczko.infrastructure.security.tokens.JwtProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
+@EnableConfigurationProperties({JwtProperties.class})
 public class ApplicationBeansConfig {
 
     @Bean
@@ -34,6 +36,11 @@ public class ApplicationBeansConfig {
     @Bean
     public CreateMailsDtoValidator createMailsDtoValidator() {
         return new CreateMailsDtoValidator();
+    }
+
+    @Bean
+    public SendEmailToSelfDtoValidator sendEmailToSelfDtoValidator() {
+        return new SendEmailToSelfDtoValidator();
     }
 
     @Bean
@@ -84,8 +91,9 @@ public class ApplicationBeansConfig {
     @Bean
     public EmailService emailService(MailPort mailPort,
                                      CreateMailDtoValidator createMailDtoValidator,
-                                     CreateMailsDtoValidator createMailsDtoValidator) {
-        return new EmailService(mailPort, createMailDtoValidator, createMailsDtoValidator);
+                                     CreateMailsDtoValidator createMailsDtoValidator,
+                                     SendEmailToSelfDtoValidator sendEmailToSelfDtoValidator) {
+        return new EmailService(mailPort, createMailDtoValidator, createMailsDtoValidator, sendEmailToSelfDtoValidator);
     }
 
     @Bean
@@ -98,12 +106,12 @@ public class ApplicationBeansConfig {
     }
 
     @Bean
-    public MovieService movieService(MoviePort MoviePort,
-                                     UserPort UserPort,
+    public MovieService movieService(MoviePort moviePort,
+                                     UserPort userPort,
                                      CreateMovieDtoValidator createMovieDtoValidator,
-                                     MovieCsvParserPort movieCsvParserPort
-    ) {
-        return new MovieService(MoviePort, UserPort, createMovieDtoValidator, movieCsvParserPort);
+                                     MovieCsvParserPort movieCsvParserPort,
+                                     TransactionPort transactionPort) {
+        return new MovieService(moviePort, userPort, createMovieDtoValidator, movieCsvParserPort, transactionPort);
     }
 
     @Bean
@@ -148,12 +156,10 @@ public class ApplicationBeansConfig {
     }
 
     @Bean
-    public UsersService usersService(UserPort UserPort,
+    public UsersService usersService(UserPort userPort,
                                      CreateUserDtoValidator createUserDtoValidator,
                                      PasswordEncoderPort passwordEncoder,
-                                     AdminPort AdminPort,
                                      TransactionPort transactionPort) {
-        return new UsersService(UserPort, createUserDtoValidator, passwordEncoder,
-                AdminPort, transactionPort);
+        return new UsersService(userPort, createUserDtoValidator, passwordEncoder, transactionPort);
     }
 }
