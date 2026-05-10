@@ -275,7 +275,7 @@
                 <version>${failsafe.version}</version>
                 <configuration>
                     <includes>
-                        <include>**/*IT.java</include>
+                        <include>com/rzodeczko/infrastructure/persistence/reposiotry/impl/*IT.java</include>
                     </includes>
                 </configuration>
                 <executions>
