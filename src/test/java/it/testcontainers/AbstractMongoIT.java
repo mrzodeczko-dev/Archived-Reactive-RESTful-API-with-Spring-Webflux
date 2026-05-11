@@ -1,5 +1,7 @@
-package testcontainers;
+package it.testcontainers;
 
+import com.rzodeczko.CinemaApplication;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -38,7 +40,5 @@ public abstract class AbstractMongoIT {
     static void mongoProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.mongodb.uri", MONGO::getReplicaSetUrl);
         registry.add("spring.data.mongodb.uri", MONGO::getReplicaSetUrl);
-        // Disable auto-index-creation in tests — Liquibase doesn't run in slice context,
-        registry.add("spring.data.mongodb.auto-index-creation", () -> "false");
     }
 }

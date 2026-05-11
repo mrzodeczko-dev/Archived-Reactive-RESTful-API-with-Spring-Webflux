@@ -1,4 +1,4 @@
-package testcontainers.repository;
+package it.testcontainers.repository;
 
 import com.rzodeczko.application.port.out.TicketPurchasePort;
 import com.rzodeczko.domain.movie.Movie;
@@ -9,6 +9,7 @@ import com.rzodeczko.domain.user.User;
 import com.rzodeczko.domain.vo.Money;
 import com.rzodeczko.infrastructure.persistence.document.TicketPurchaseDocument;
 import com.rzodeczko.infrastructure.persistence.repository.impl.TicketPurchaseRepositoryImpl;
+import it.testcontainers.AbstractMongoIT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,7 +19,6 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import reactor.test.StepVerifier;
-import testcontainers.AbstractMongoIT;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

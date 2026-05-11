@@ -1,4 +1,4 @@
-package testcontainers.repository;
+package it.testcontainers.repository;
 
 import com.rzodeczko.application.port.out.CinemaHallPort;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
@@ -8,6 +8,7 @@ import com.rzodeczko.domain.vo.Money;
 import com.rzodeczko.domain.vo.Position;
 import com.rzodeczko.infrastructure.persistence.document.CinemaHallDocument;
 import com.rzodeczko.infrastructure.persistence.repository.impl.CinemaHallRepositoryImpl;
+import it.testcontainers.AbstractMongoIT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
-import testcontainers.AbstractMongoIT;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -54,6 +55,7 @@ class CinemaHallRepositoryImplIT extends AbstractMongoIT {
         hall3.setCinemaId("cinema-2");
 
         cinemaHallPort.addOrUpdateMany(List.of(hall1, hall2, hall3)).blockLast();
+
 
         StepVerifier.create(cinemaHallPort.getAllForCinemaById("cinema-1").collectList())
                 .assertNext(l -> assertThat(l).hasSize(2))

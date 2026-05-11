@@ -201,6 +201,11 @@
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -273,16 +278,29 @@
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${failsafe.version}</version>
-                <configuration>
-                    <includes>
-                        <include>com/rzodeczko/infrastructure/persistence/reposiotry/impl/*IT.java</include>
-                    </includes>
-                </configuration>
                 <executions>
                     <execution>
+                        <id>testcontainers</id>
+                        <phase>integration-test</phase>
+                        <configuration>
+                            <includes>
+                                <include>**/testcontainers/repository/*IT.java</include>
+                            </includes>
+                        </configuration>
                         <goals>
                             <goal>integration-test</goal>
-                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>handlers</id>
+                        <phase>integration-test</phase>
+                        <configuration>
+                            <includes>
+                                <include>**/handlers/*IT.java</include>
+                            </includes>
+                        </configuration>
+                        <goals>
+                            <goal>integration-test</goal>
                         </goals>
                     </execution>
                 </executions>

@@ -1,17 +1,6 @@
-server:
-  port: 9999
-
 spring:
   mongodb:
     host: a,b,c #dynamically overridden by Testcontainers
     port: 0 #dynamically overridden by Testcontainers
     replica-set-name: rs0
     database: tstdb
-
-  mail:
-    username: tst
-    password: tst
-
-jwt:
-  secret-key: secret
-

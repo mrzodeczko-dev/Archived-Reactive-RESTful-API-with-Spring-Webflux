@@ -107,7 +107,7 @@ services:
   liquibase-mongo:
     build:
       context: ./db
-      dockerfile: Dockerfile.liquibase
+      dockerfile: Dockerfile-liquibase
     container_name: liquibase-mongo
     restart: "no"
     depends_on:

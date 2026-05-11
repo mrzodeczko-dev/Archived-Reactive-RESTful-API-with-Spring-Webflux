@@ -4,14 +4,10 @@ import com.rzodeczko.application.port.out.*;
 import com.rzodeczko.application.service.*;
 import com.rzodeczko.application.validator.*;
 import com.rzodeczko.infrastructure.csv.CsvMovieParserAdapter;
-import com.rzodeczko.infrastructure.persistence.initscripts.AppAdminCredentials;
-import com.rzodeczko.infrastructure.security.tokens.JwtProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({JwtProperties.class, AppAdminCredentials.class})
 public class ApplicationBeansConfig {
 
     @Bean

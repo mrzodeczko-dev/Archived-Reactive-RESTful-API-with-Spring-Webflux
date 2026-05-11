@@ -1,9 +1,10 @@
-package testcontainers.repository;
+package it.testcontainers.repository;
 
 import com.rzodeczko.application.port.out.CityPort;
 import com.rzodeczko.domain.city.City;
 import com.rzodeczko.infrastructure.persistence.document.CityDocument;
 import com.rzodeczko.infrastructure.persistence.repository.impl.CityRepositoryImpl;
+import it.testcontainers.AbstractMongoIT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
-import testcontainers.AbstractMongoIT;
 
 import java.util.List;
 

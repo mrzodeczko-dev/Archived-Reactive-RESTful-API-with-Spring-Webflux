@@ -4,6 +4,7 @@ import com.rzodeczko.application.dto.*;
 import com.rzodeczko.application.exception.MovieServiceException;
 import com.rzodeczko.application.service.MovieService;
 import com.rzodeczko.infrastructure.aspect.annotations.Loggable;
+import com.rzodeczko.presentation.routing.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -32,6 +33,7 @@ import java.io.IOException;
 public class MoviesHandler {
 
     private final MovieService movieService;
+    private final CurrentUserProvider currentUserProvider;
 
     @Loggable
     @Operation(
@@ -47,8 +49,8 @@ public class MoviesHandler {
             })
     })
     public Mono<ServerResponse> addMovieToFavorites(final ServerRequest serverRequest) {
-        return serverRequest.principal()
-                .flatMap(principal -> movieService.addMovieToFavorites(serverRequest.pathVariable("id"), principal.getName()))
+        return currentUserProvider.username()
+                .flatMap(username -> movieService.addMovieToFavorites(serverRequest.pathVariable("id"), username))
                 .flatMap(movie -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,7 +164,7 @@ public class MoviesHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> getAllMovies(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getAllMovies() {
         return movieService.getAll()
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
@@ -293,9 +295,9 @@ public class MoviesHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> getFavoriteMovies(ServerRequest serverRequest) {
-        return serverRequest.principal()
-                .flatMapMany(principal -> movieService.getFavoriteMovies(principal.getName()))
+    public Mono<ServerResponse> getFavoriteMovies() {
+        return currentUserProvider.username()
+                .flatMapMany(movieService::getFavoriteMovies)
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)

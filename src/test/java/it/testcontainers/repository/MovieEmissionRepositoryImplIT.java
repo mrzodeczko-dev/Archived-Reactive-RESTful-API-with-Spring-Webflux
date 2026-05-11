@@ -1,4 +1,4 @@
-package testcontainers.repository;
+package it.testcontainers.repository;
 
 import com.rzodeczko.application.port.out.MovieEmissionPort;
 import com.rzodeczko.domain.movie.Movie;
@@ -6,6 +6,7 @@ import com.rzodeczko.domain.movie_emission.MovieEmission;
 import com.rzodeczko.domain.vo.Money;
 import com.rzodeczko.infrastructure.persistence.document.MovieEmissionDocument;
 import com.rzodeczko.infrastructure.persistence.repository.impl.MovieEmissionRepositoryImpl;
+import it.testcontainers.AbstractMongoIT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,6 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import reactor.test.StepVerifier;
-import testcontainers.AbstractMongoIT;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
