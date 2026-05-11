@@ -22,20 +22,54 @@ jobs:
           cache: 'maven'
 
       - name: Build (package)
-        run: mvn clean package --batch-mode --no-transfer-progress
+        run: mvn clean package --batch-mode --no-transfer-progress -DskipTests
 
       - name: Run unit tests
-        run: mvn test --batch-mode --no-transfer-progress
+        run: >
+          mvn test
+          --batch-mode
+          --no-transfer-progress
+          -Djacoco.dataFile=target/jacoco-unit.exec
+          -Djacoco.skip.check=true
 
       - name: Run integration webflux slice tests
-        run: mvn verify -P it-handlers
+        run: >
+          mvn failsafe:integration-test failsafe:verify
+          -P it-handlers
+          --batch-mode
+          --no-transfer-progress
+          -Djacoco.dataFile=target/jacoco-handlers.exec
+          -Djacoco.skip.check=true
 
       - name: Run integration testcontainers
-        run: mvn verify -P it-testcontainers
+        run: >
+          mvn failsafe:integration-test failsafe:verify
+          -P it-testcontainers
+          --batch-mode
+          --no-transfer-progress
+          -Djacoco.dataFile=target/jacoco-testcontainers.exec
+          -Djacoco.skip.check=true
 
+      - name: Merge JaCoCo exec files
+        run: >
+          mvn jacoco:merge
+          --batch-mode
+          --no-transfer-progress
+          -Djacoco.destFile=target/jacoco.exec
 
       - name: Generate JaCoCo report
-        run: mvn jacoco:report --batch-mode --no-transfer-progress
+        run: >
+          mvn jacoco:report
+          --batch-mode
+          --no-transfer-progress
+          -Djacoco.dataFile=target/jacoco.exec
+
+      - name: Check JaCoCo coverage
+        run: >
+          mvn jacoco:check
+          --batch-mode
+          --no-transfer-progress
+          -Djacoco.skip.check=false
 
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4
