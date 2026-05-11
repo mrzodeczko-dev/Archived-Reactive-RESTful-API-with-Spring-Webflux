@@ -34,7 +34,6 @@
         <skipITs>false</skipITs>
 
         <jacoco.dataFile>${project.build.directory}/jacoco.exec</jacoco.dataFile>
-        <jacoco.skip.check>false</jacoco.skip.check>
     </properties>
 
     <dependencies>
@@ -293,6 +292,19 @@
                 <configuration>
                     <destFile>${jacoco.dataFile}</destFile>
                     <append>true</append>
+                    <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+                    <rules>
+                        <rule>
+                            <element>BUNDLE</element>
+                            <limits>
+                                <limit>
+                                    <counter>INSTRUCTION</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.80</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                    </rules>
                     <fileSets>
                         <fileSet>
                             <directory>${project.build.directory}</directory>
@@ -308,30 +320,6 @@
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
-                    </execution>
-
-                    <execution>
-                        <id>check</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${jacoco.skip.check}</skip>
-                            <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>INSTRUCTION</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.80</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

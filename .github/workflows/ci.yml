@@ -22,7 +22,7 @@ jobs:
           cache: 'maven'
 
       - name: Build (package)
-        run: mvn clean package --batch-mode --no-transfer-progress -DskipTests
+        run: mvn clean package --batch-mode --no-transfer-progress -Dmaven.test.skip=true
 
       - name: Run unit tests
         run: >
@@ -30,7 +30,6 @@ jobs:
           --batch-mode
           --no-transfer-progress
           -Djacoco.dataFile=target/jacoco-unit.exec
-          -Djacoco.skip.check=true
 
       - name: Run integration webflux slice tests
         run: >
@@ -39,7 +38,6 @@ jobs:
           --batch-mode
           --no-transfer-progress
           -Djacoco.dataFile=target/jacoco-handlers.exec
-          -Djacoco.skip.check=true
 
       - name: Run integration testcontainers
         run: >
@@ -48,7 +46,6 @@ jobs:
           --batch-mode
           --no-transfer-progress
           -Djacoco.dataFile=target/jacoco-testcontainers.exec
-          -Djacoco.skip.check=true
 
       - name: Merge JaCoCo exec files
         run: >
@@ -69,7 +66,7 @@ jobs:
           mvn jacoco:check
           --batch-mode
           --no-transfer-progress
-          -Djacoco.skip.check=false
+          -Djacoco.dataFile=target/jacoco.exec
 
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4
