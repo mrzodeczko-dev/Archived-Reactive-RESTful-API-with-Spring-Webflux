@@ -31,7 +31,8 @@
         <failsafe.version>3.2.5</failsafe.version>
 
         <skipUTs>false</skipUTs>
-        <skipITs>false</skipITs>
+        <!-- Domyślnie IT są wyłączone — profile IT je odblokowują -->
+        <skipITs>true</skipITs>
 
         <jacoco.dataFile>${project.build.directory}/jacoco.exec</jacoco.dataFile>
     </properties>
@@ -279,16 +280,17 @@
                 </configuration>
             </plugin>
 
+            <!--
+                Domyślna konfiguracja failsafe — BEZ <includes>.
+                Każdy profil IT definiuje własne <execution> z właściwymi <includes>.
+                skipITs=true domyślnie, więc bez aktywnego profilu IT nic się nie odpali.
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${failsafe.version}</version>
                 <configuration>
                     <skipITs>${skipITs}</skipITs>
-                    <includes>
-                        <include>**/*SliceTest.java</include>
-                        <include>**/testcontainers/*IT.java</include>
-                    </includes>
                 </configuration>
             </plugin>
 
@@ -354,6 +356,7 @@
                                 <id>handlers</id>
                                 <phase>integration-test</phase>
                                 <configuration>
+                                    <!-- Tylko SliceTesty z pakietu handlers -->
                                     <includes>
                                         <include>**/handlers/*SliceTest.java</include>
                                     </includes>
@@ -386,6 +389,7 @@
                                 <id>testcontainers</id>
                                 <phase>integration-test</phase>
                                 <configuration>
+                                    <!-- Tylko *IT.java z pakietu testcontainers -->
                                     <includes>
                                         <include>**/testcontainers/*IT.java</include>
                                     </includes>

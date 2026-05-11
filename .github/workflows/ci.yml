@@ -33,12 +33,10 @@ jobs:
       matrix:
         suite:
           - name: unit
-            # test-compile kompiluje klasy testowe, potem surefire je uruchamia
             cmd: mvn test-compile surefire:test
             profile: ""
             exec: jacoco-unit.exec
           - name: it-handlers
-            # test-compile kompiluje klasy testowe, profile nadpisuje <includes> w failsafe
             cmd: mvn test-compile failsafe:integration-test failsafe:verify
             profile: -P it-handlers
             exec: jacoco-it-handlers.exec
@@ -88,7 +86,6 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      # Kompilujemy klasy produkcyjne żeby jacoco:report miał do nich dostęp
       - name: Compile production classes
         run: mvn compile --batch-mode --no-transfer-progress
       - uses: actions/download-artifact@v4
