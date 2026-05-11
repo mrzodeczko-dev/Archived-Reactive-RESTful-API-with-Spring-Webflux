@@ -61,13 +61,6 @@ jobs:
           --no-transfer-progress
           -Djacoco.dataFile=target/jacoco.exec
 
-      - name: Check JaCoCo coverage
-        run: >
-          mvn jacoco:check
-          --batch-mode
-          --no-transfer-progress
-          -Djacoco.dataFile=target/jacoco.exec
-
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4
         with:
@@ -81,3 +74,11 @@ jobs:
           files: target/site/jacoco/jacoco.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Check JaCoCo coverage
+        run: >
+          mvn jacoco:check
+          --batch-mode
+          --no-transfer-progress
+          -Djacoco.dataFile=target/jacoco.exec
+
