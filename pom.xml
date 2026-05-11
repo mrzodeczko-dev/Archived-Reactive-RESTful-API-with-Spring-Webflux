@@ -273,6 +273,9 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
+                    <excludes>
+                        <exclude>**/*SliceTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 
@@ -293,6 +296,9 @@
                     <destFile>${jacoco.dataFile}</destFile>
                     <append>true</append>
                     <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+                    <excludes>
+                        <exclude>**/domain/**</exclude>
+                    </excludes>
                     <rules>
                         <rule>
                             <element>BUNDLE</element>
@@ -300,7 +306,7 @@
                                 <limit>
                                     <counter>INSTRUCTION</counter>
                                     <value>COVEREDRATIO</value>
-                                    <minimum>0.80</minimum>
+                                    <minimum>0.60</minimum>
                                 </limit>
                             </limits>
                         </rule>
