@@ -27,8 +27,12 @@ jobs:
       - name: Run unit tests
         run: mvn test --batch-mode --no-transfer-progress
 
+      - name: Run integration webflux slice tests
+        run: mvn verify -P it-handlers
+
       - name: Run integration testcontainers
-        run: mvn failsafe:integration-test failsafe:verify --batch-mode --no-transfer-progress
+        run: mvn verify -P it-testcontainers
+
 
       - name: Generate JaCoCo report
         run: mvn jacoco:report --batch-mode --no-transfer-progress
