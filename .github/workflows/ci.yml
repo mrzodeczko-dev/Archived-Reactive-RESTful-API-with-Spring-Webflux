@@ -20,14 +20,10 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      # Budujemy bez testów tylko po to, żeby sprawdzić czy projekt się kompiluje
+      # i żeby wypełnić cache M2 — resztę robią joby testowe samodzielnie
       - name: Build package without tests
         run: mvn clean package --batch-mode --no-transfer-progress -Dmaven.test.skip=true
-      - name: Upload compiled classes
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiled-classes
-          path: target/
-          retention-days: 1
 
   test:
     runs-on: ubuntu-latest
@@ -37,15 +33,17 @@ jobs:
       matrix:
         suite:
           - name: unit
-            cmd: mvn surefire:test
+            # test-compile kompiluje klasy testowe, potem surefire je uruchamia
+            cmd: mvn test-compile surefire:test
             profile: ""
             exec: jacoco-unit.exec
           - name: it-handlers
-            cmd: mvn failsafe:integration-test failsafe:verify
+            # test-compile kompiluje klasy testowe, profile nadpisuje <includes> w failsafe
+            cmd: mvn test-compile failsafe:integration-test failsafe:verify
             profile: -P it-handlers
             exec: jacoco-it-handlers.exec
           - name: it-testcontainers
-            cmd: mvn failsafe:integration-test failsafe:verify
+            cmd: mvn test-compile failsafe:integration-test failsafe:verify
             profile: -P it-testcontainers
             exec: jacoco-it-testcontainers.exec
     steps:
@@ -61,21 +59,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # Pobieramy skompilowane klasy z joba build — bez tego Maven
-      # musiałby kompilować od nowa i mógłby nie znaleźć zasobów.
-      - name: Download compiled classes
-        uses: actions/download-artifact@v4
-        with:
-          name: compiled-classes
-          path: target/
-
       - name: Run ${{ matrix.suite.name }} tests
         run: >
           ${{ matrix.suite.cmd }}
           ${{ matrix.suite.profile }}
           --batch-mode
           --no-transfer-progress
-          -Dmaven.main.skip=true
           -Djacoco.dataFile=target/${{ matrix.suite.exec }}
 
       - uses: actions/upload-artifact@v4
@@ -99,11 +88,9 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Download compiled classes
-        uses: actions/download-artifact@v4
-        with:
-          name: compiled-classes
-          path: target/
+      # Kompilujemy klasy produkcyjne żeby jacoco:report miał do nich dostęp
+      - name: Compile production classes
+        run: mvn compile --batch-mode --no-transfer-progress
       - uses: actions/download-artifact@v4
         with:
           name: jacoco-unit
