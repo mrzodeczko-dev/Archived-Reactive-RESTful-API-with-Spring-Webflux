@@ -2,13 +2,11 @@ package com.rzodeczko.infrastructure.csv;
 
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.rzodeczko.application.csv.ParseResult;
-import com.rzodeczko.application.dto.CreateMovieDto;
-import com.rzodeczko.application.exception.MovieServiceException;
-import com.rzodeczko.application.port.out.MovieCsvParserPort;
-import com.rzodeczko.application.validator.CreateMovieDtoValidator;
+import com.rzodeczko.application.dto.CreateCinemaHallDto;
+import com.rzodeczko.application.exception.CinemaHallServiceException;
+import com.rzodeczko.application.port.out.CinemaHallCsvParserPort;
+import com.rzodeczko.application.validator.CreateCinemaHallDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -22,32 +20,30 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-public class CsvMovieParserAdapter implements MovieCsvParserPort {
+public class CsvCinemaHallParserAdapter implements CinemaHallCsvParserPort {
 
-    private static final Logger log = LogManager.getLogger(CsvMovieParserAdapter.class);
+    private final CreateCinemaHallDtoValidator createCinemaHallDtoValidator;
 
-    private final CreateMovieDtoValidator createMovieDtoValidator;
-
-    public CsvMovieParserAdapter(CreateMovieDtoValidator createMovieDtoValidator) {
-        this.createMovieDtoValidator = createMovieDtoValidator;
+    public CsvCinemaHallParserAdapter(CreateCinemaHallDtoValidator createCinemaHallDtoValidator) {
+        this.createCinemaHallDtoValidator = createCinemaHallDtoValidator;
     }
 
     @Override
-    public Mono<ParseResult<CreateMovieDto>> parse(InputStream inputStream) {
+    public Mono<ParseResult<CreateCinemaHallDto>> parse(InputStream inputStream) {
         return Mono.fromCallable(() -> {
             var errors = new ArrayList<String>();
-            var items = collectMoviesFromCsv(
+            var items = collectCinemaHallsFromCsv(
                     new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)),
                     errors);
             return ParseResult.of(items, errors);
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    private List<CreateMovieDto> collectMoviesFromCsv(BufferedReader bufferedReader, List<String> errors) {
+    private List<CreateCinemaHallDto> collectCinemaHallsFromCsv(BufferedReader bufferedReader, List<String> errors) {
         try {
             var counter = new AtomicInteger(1);
-            return new CsvToBeanBuilder<CsvMovieRow>(bufferedReader)
-                    .withType(CsvMovieRow.class)
+            return new CsvToBeanBuilder<CsvCinemaHallRow>(bufferedReader)
+                    .withType(CsvCinemaHallRow.class)
                     .withIgnoreLeadingWhiteSpace(true)
                     .withSeparator(',')
                     .build()
@@ -55,17 +51,17 @@ public class CsvMovieParserAdapter implements MovieCsvParserPort {
                     .stream()
                     .map(row -> {
                         var dto = row.toApplicationDto();
-                        var validationErrors = createMovieDtoValidator.validate(dto);
+                        var validationErrors = createCinemaHallDtoValidator.validate(dto);
                         var counterVal = counter.getAndIncrement();
                         if (Validations.hasErrors(validationErrors)) {
-                            errors.add("Movie in row no. %s is not valid. %s"
+                            errors.add("Cinema hall in row no. %s is not valid. %s"
                                     .formatted(counterVal, Validations.createErrorMessage(validationErrors)));
                         }
                         return dto;
                     })
                     .toList();
         } catch (Exception e) {
-            throw e instanceof MovieServiceException me ? me : new MovieServiceException("The file extension .csv is required");
+            throw e instanceof CinemaHallServiceException ce ? ce : new CinemaHallServiceException("The file extension .csv is required");
         }
     }
 }

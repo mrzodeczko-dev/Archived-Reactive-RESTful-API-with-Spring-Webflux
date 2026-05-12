@@ -29,7 +29,7 @@ public class CreateCinemaHallDtoValidator implements Validator<CreateCinemaHallD
         }
 
         if (!isRowNoValid(item.rowNo())) {
-            errors.put("rowNo", "[%d] is not valid. Min required is: %s".formatted(item.colNo(), MIN_NUMBER_OF_ROWS_AND_COL));
+            errors.put("rowNo", "[%d] is not valid. Min required is: %s".formatted(item.rowNo(), MIN_NUMBER_OF_ROWS_AND_COL));
         }
 
         return errors;

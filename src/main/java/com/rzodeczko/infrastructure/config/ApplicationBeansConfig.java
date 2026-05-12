@@ -3,11 +3,6 @@ package com.rzodeczko.infrastructure.config;
 import com.rzodeczko.application.port.out.*;
 import com.rzodeczko.application.service.*;
 import com.rzodeczko.application.validator.*;
-import com.rzodeczko.infrastructure.csv.CsvCinemaHallParserAdapter;
-import com.rzodeczko.infrastructure.csv.CsvCinemaParserAdapter;
-import com.rzodeczko.infrastructure.csv.CsvCityParserAdapter;
-import com.rzodeczko.infrastructure.csv.CsvMovieEmissionParserAdapter;
-import com.rzodeczko.infrastructure.csv.CsvMovieParserAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -124,31 +119,6 @@ public class ApplicationBeansConfig {
                                      MovieCsvParserPort movieCsvParserPort,
                                      TransactionPort transactionPort) {
         return new MovieService(moviePort, userPort, createMovieDtoValidator, movieCsvParserPort, transactionPort);
-    }
-
-    @Bean
-    public MovieCsvParserPort movieCsvParserPort(CreateMovieDtoValidator createMovieDtoValidator) {
-        return new CsvMovieParserAdapter(createMovieDtoValidator);
-    }
-
-    @Bean
-    public MovieEmissionCsvParserPort movieEmissionCsvParserPort(CreateMovieEmissionDtoValidator createMovieEmissionDtoValidator) {
-        return new CsvMovieEmissionParserAdapter(createMovieEmissionDtoValidator);
-    }
-
-    @Bean
-    public CityCsvParserPort cityCsvParserPort() {
-        return new CsvCityParserAdapter();
-    }
-
-    @Bean
-    public CinemaCsvParserPort cinemaCsvParserPort(CreateCinemaDtoValidator createCinemaDtoValidator) {
-        return new CsvCinemaParserAdapter(createCinemaDtoValidator);
-    }
-
-    @Bean
-    public CinemaHallCsvParserPort cinemaHallCsvParserPort(CreateCinemaHallDtoValidator createCinemaHallDtoValidator) {
-        return new CsvCinemaHallParserAdapter(createCinemaHallDtoValidator);
     }
 
     @Bean

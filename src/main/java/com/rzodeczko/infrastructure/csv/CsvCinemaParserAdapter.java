@@ -2,13 +2,11 @@ package com.rzodeczko.infrastructure.csv;
 
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.rzodeczko.application.csv.ParseResult;
-import com.rzodeczko.application.dto.CreateMovieDto;
-import com.rzodeczko.application.exception.MovieServiceException;
-import com.rzodeczko.application.port.out.MovieCsvParserPort;
-import com.rzodeczko.application.validator.CreateMovieDtoValidator;
+import com.rzodeczko.application.dto.CreateCinemaDto;
+import com.rzodeczko.application.exception.CinemaServiceException;
+import com.rzodeczko.application.port.out.CinemaCsvParserPort;
+import com.rzodeczko.application.validator.CreateCinemaDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -22,50 +20,48 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-public class CsvMovieParserAdapter implements MovieCsvParserPort {
+public class CsvCinemaParserAdapter implements CinemaCsvParserPort {
 
-    private static final Logger log = LogManager.getLogger(CsvMovieParserAdapter.class);
+    private final CreateCinemaDtoValidator createCinemaDtoValidator;
 
-    private final CreateMovieDtoValidator createMovieDtoValidator;
-
-    public CsvMovieParserAdapter(CreateMovieDtoValidator createMovieDtoValidator) {
-        this.createMovieDtoValidator = createMovieDtoValidator;
+    public CsvCinemaParserAdapter(CreateCinemaDtoValidator createCinemaDtoValidator) {
+        this.createCinemaDtoValidator = createCinemaDtoValidator;
     }
 
     @Override
-    public Mono<ParseResult<CreateMovieDto>> parse(InputStream inputStream) {
+    public Mono<ParseResult<CreateCinemaDto>> parse(InputStream inputStream) {
         return Mono.fromCallable(() -> {
             var errors = new ArrayList<String>();
-            var items = collectMoviesFromCsv(
+            var items = collectCinemasFromCsv(
                     new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)),
                     errors);
             return ParseResult.of(items, errors);
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    private List<CreateMovieDto> collectMoviesFromCsv(BufferedReader bufferedReader, List<String> errors) {
+    private List<CreateCinemaDto> collectCinemasFromCsv(BufferedReader bufferedReader, List<String> errors) {
         try {
             var counter = new AtomicInteger(1);
-            return new CsvToBeanBuilder<CsvMovieRow>(bufferedReader)
-                    .withType(CsvMovieRow.class)
+            return new CsvToBeanBuilder<CsvCinemaRow>(bufferedReader)
+                    .withType(CsvCinemaRow.class)
                     .withIgnoreLeadingWhiteSpace(true)
                     .withSeparator(',')
                     .build()
                     .parse()
                     .stream()
                     .map(row -> {
-                        var dto = row.toApplicationDto();
-                        var validationErrors = createMovieDtoValidator.validate(dto);
                         var counterVal = counter.getAndIncrement();
+                        var dto = row.toApplicationDto(errors, counterVal);
+                        var validationErrors = createCinemaDtoValidator.validate(dto);
                         if (Validations.hasErrors(validationErrors)) {
-                            errors.add("Movie in row no. %s is not valid. %s"
+                            errors.add("Cinema in row no. %s is not valid. %s"
                                     .formatted(counterVal, Validations.createErrorMessage(validationErrors)));
                         }
                         return dto;
                     })
                     .toList();
         } catch (Exception e) {
-            throw e instanceof MovieServiceException me ? me : new MovieServiceException("The file extension .csv is required");
+            throw e instanceof CinemaServiceException ce ? ce : new CinemaServiceException("The file extension .csv is required");
         }
     }
 }

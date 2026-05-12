@@ -20,9 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class CinemaService {
@@ -108,19 +106,15 @@ public class CinemaService {
     }
 
     public Flux<CinemaDto> uploadCSVFile(InputStream inputStream) {
-        var errorsList = Collections.synchronizedList(new ArrayList<String>());
-
-        return cinemaCsvParserPort.parse(inputStream, errorsList)
-                .collectList()
-                .flatMapMany(cinemas -> saveCinemas(cinemas, errorsList));
-    }
-
-    private Flux<CinemaDto> saveCinemas(List<CreateCinemaDto> cinemas, List<String> errorsList) {
-        if (!errorsList.isEmpty()) {
-            return Flux.error(new CinemaServiceException("Errors are: %s".formatted(errorsList)));
-        }
-        return transactionPort.inTransactionMany(Flux.fromIterable(cinemas).concatMap(this::saveCinema))
-                .map(CinemaMapper::toDto);
+        return cinemaCsvParserPort.parse(inputStream)
+                .flatMapMany(result -> {
+                    if (result.hasErrors()) {
+                        return Flux.error(new CinemaServiceException("Errors are: %s".formatted(result.errors())));
+                    }
+                    return transactionPort.inTransactionMany(
+                            Flux.fromIterable(result.items()).concatMap(this::saveCinema)
+                    ).map(CinemaMapper::toDto);
+                });
     }
 
     private Cinema addCinemaHallToCinema(Cinema cinema, CinemaHall cinemaHall) {
