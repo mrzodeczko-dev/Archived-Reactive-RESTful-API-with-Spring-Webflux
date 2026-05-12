@@ -63,7 +63,7 @@ public class CinemasHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getAll() {
         return cinemaService.getAll()
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)

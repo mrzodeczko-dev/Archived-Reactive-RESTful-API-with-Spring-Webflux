@@ -27,7 +27,7 @@ public class CitiesRouting extends BaseJsonRouter {
                         .nest(jsonAccept(), nested -> nested
                                 .POST("", citiesHandler::addCity)
                                 .GET("/name/{name}", citiesHandler::findByName)
-                                .GET("", citiesHandler::getAll)
+                                .GET("", _ -> citiesHandler.getAll())
                                 .PUT("", citiesHandler::addCinemaToCity)
                         )
                 )

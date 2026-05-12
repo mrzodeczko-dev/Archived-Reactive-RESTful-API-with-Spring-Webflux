@@ -69,7 +69,7 @@ public class MovieEmissionsHandler {
             })
 
     })
-    public Mono<ServerResponse> getAllMovieEmissions(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getAllMovieEmissions() {
 
         return movieEmissionService.getAllMovieEmissions()
                 .collectList()

@@ -26,7 +26,7 @@ public class UsersRouting extends BaseJsonRouter {
                 .POST("/register", jsonAccept(), usersHandler::register)
                 .path("/users", builder -> builder
                         .nest(jsonAccept(), nested -> nested
-                                .GET("", usersHandler::getAllUsers)
+                                .GET("", _ -> usersHandler.getAllUsers())
                                 .GET("/username/{username}", usersHandler::getByUsername)
                                 .POST("/promoteToAdmin/username/{username}", usersHandler::promoteUserToAdminRole)
                         )

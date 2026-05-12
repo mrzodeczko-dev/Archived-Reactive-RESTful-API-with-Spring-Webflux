@@ -5,6 +5,7 @@ import com.rzodeczko.application.dto.ResponseErrorDto;
 import com.rzodeczko.application.dto.TicketOrderDto;
 import com.rzodeczko.application.service.TicketOrderService;
 import com.rzodeczko.infrastructure.aspect.annotations.Loggable;
+import com.rzodeczko.presentation.routing.userprovider.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -29,6 +30,7 @@ import reactor.core.publisher.Mono;
 public class TicketOrderHandler {
 
     private final TicketOrderService ticketOrderService;
+    private final CurrentUserProvider currentUserProvider;
 
     @Loggable
     @Operation(
@@ -69,8 +71,8 @@ public class TicketOrderHandler {
     })
     public Mono<ServerResponse> cancelOrder(ServerRequest serverRequest) {
 
-        return serverRequest.principal()
-                .flatMap(principal -> ticketOrderService.cancelOrder(principal.getName(), serverRequest.pathVariable("orderId")))
+        return currentUserProvider.username()
+                .flatMap(username -> ticketOrderService.cancelOrder(username, serverRequest.pathVariable("orderId")))
                 .flatMap(ticketOrder -> ServerResponse
                         .status(200)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,10 +94,9 @@ public class TicketOrderHandler {
             })
 
     })
-    public Mono<ServerResponse> getAllTicketOrdersByUsername(ServerRequest serverRequest) {
-
-        return serverRequest.principal()
-                .flatMapMany(principal -> ticketOrderService.getAllTicketOrdersForLoggedUser(principal.getName()))
+    public Mono<ServerResponse> getAllTicketOrdersByUsername() {
+        return currentUserProvider.username()
+                .flatMapMany(ticketOrderService::getAllTicketOrdersForLoggedUser)
                 .collectList()
                 .flatMap(list -> ServerResponse
                         .status(200)

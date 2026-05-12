@@ -27,12 +27,12 @@ public class StatisticsRouting extends BaseJsonRouter {
         return route()
                 .path("/statistics", builder -> builder
                         .nest(jsonAccept(), nested -> nested
-                                .GET("/cities/cinemaFrequency", statisticsHandler::getCinemaFrequencyByCityForAllCities)
-                                .GET("/cities/cinemaFrequency/max", statisticsHandler::getCityWithMaxFrequency)
-                                .GET("/movies/mostPopular/byCity", statisticsHandler::findMostPopularMovieGroupedByCity)
-                                .GET("/movies/frequency", statisticsHandler::findAllMoviesFrequency)
+                                .GET("/cities/cinemaFrequency", _ -> statisticsHandler.getCinemaFrequencyByCityForAllCities())
+                                .GET("/cities/cinemaFrequency/max", _ -> statisticsHandler.getCityWithMaxFrequency())
+                                .GET("/movies/mostPopular/byCity", _ -> statisticsHandler.findMostPopularMovieGroupedByCity())
+                                .GET("/movies/frequency", _ -> statisticsHandler.findAllMoviesFrequency())
                                 .GET("/movies/mostPopularGroupedByGenre/byCity/{city}", statisticsHandler::findMostPopularMoviesGroupedByGenreInCity)
-                                .GET("/averageTicketPrice", statisticsHandler::getAverageTicketPriceGroupedByCity)
+                                .GET("/averageTicketPrice", _ -> statisticsHandler.getAverageTicketPriceGroupedByCity())
                         )
                 )
                 .build();

@@ -35,7 +35,7 @@ public class StatisticsHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> getCinemaFrequencyByCityForAllCities(final ServerRequest serverRequest) {
+    public Mono<ServerResponse> getCinemaFrequencyByCityForAllCities() {
         return statisticsService.findCitiesFrequency()
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
@@ -54,7 +54,7 @@ public class StatisticsHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> getCityWithMaxFrequency(final ServerRequest serverRequest) {
+    public Mono<ServerResponse> getCityWithMaxFrequency() {
         return statisticsService.findCitiesWithMostFrequency()
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
@@ -73,7 +73,7 @@ public class StatisticsHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> findMostPopularMovieGroupedByCity(final ServerRequest serverRequest) {
+    public Mono<ServerResponse> findMostPopularMovieGroupedByCity() {
         return statisticsService.findMostPopularMovieGroupedByCity()
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
@@ -92,7 +92,7 @@ public class StatisticsHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> findAllMoviesFrequency(final ServerRequest serverRequest) {
+    public Mono<ServerResponse> findAllMoviesFrequency() {
         return statisticsService.findAllMoviesFrequency()
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)
@@ -130,7 +130,7 @@ public class StatisticsHandler {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
             })
     })
-    public Mono<ServerResponse> getAverageTicketPriceGroupedByCity(final ServerRequest serverRequest) {
+    public Mono<ServerResponse> getAverageTicketPriceGroupedByCity() {
         return statisticsService.getAverageTicketPriceGroupedByCity()
                 .as(flux -> ServerResponse
                         .status(HttpStatus.OK)

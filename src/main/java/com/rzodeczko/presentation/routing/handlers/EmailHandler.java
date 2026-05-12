@@ -1,10 +1,14 @@
 package com.rzodeczko.presentation.routing.handlers;
 
-import com.rzodeczko.application.dto.*;
+import com.rzodeczko.application.dto.CreateMailsDto;
+import com.rzodeczko.application.dto.MailDto;
+import com.rzodeczko.application.dto.ResponseErrorDto;
+import com.rzodeczko.application.dto.SendEmailToSelfDto;
 import com.rzodeczko.application.exception.EmailServiceException;
 import com.rzodeczko.application.port.out.UserPort;
 import com.rzodeczko.application.service.EmailService;
 import com.rzodeczko.infrastructure.aspect.annotations.Loggable;
+import com.rzodeczko.presentation.routing.userprovider.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,6 +32,7 @@ public class EmailHandler {
 
     private final EmailService emailService;
     private final UserPort userPort;
+    private final CurrentUserProvider currentUserProvider;
 
     /**
      * Sends an email to the currently authenticated user. The request body contains only
@@ -53,8 +58,8 @@ public class EmailHandler {
     public Mono<ServerResponse> sendSingleEmail(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(SendEmailToSelfDto.class)
                 .switchIfEmpty(Mono.error(() -> new EmailServiceException("No mail info defined")))
-                .zipWith(serverRequest.principal())
-                .flatMap(tuple -> userPort.findByUsername(tuple.getT2().getName())
+                .zipWith(currentUserProvider.username())
+                .flatMap(tuple -> userPort.findByUsername(tuple.getT2())
                         .switchIfEmpty(Mono.error(() -> new EmailServiceException("Logged user not found")))
                         .flatMap(user -> emailService.sendEmailToSelf(tuple.getT1(), user.getEmail())))
                 .flatMap(mailDto -> ServerResponse

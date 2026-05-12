@@ -26,7 +26,7 @@ public class TicketOrdersRouting extends BaseJsonRouter {
                 .path("/ticketsOrders", builder -> builder
                         .nest(jsonAccept(), nested -> nested
                                 .PUT("/cancel/orderId/{orderId}", ticketOrderHandler::cancelOrder)
-                                .GET("/username", ticketOrderHandler::getAllTicketOrdersByUsername)
+                                .GET("/username", _ -> ticketOrderHandler.getAllTicketOrdersByUsername())
                         )
                 )
                 .build();

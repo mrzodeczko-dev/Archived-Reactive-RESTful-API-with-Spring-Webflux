@@ -1,4 +1,4 @@
-package com.rzodeczko.presentation.routing;
+package com.rzodeczko.presentation.routing.userprovider;
 
 import com.rzodeczko.application.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;

@@ -67,7 +67,7 @@ public class UsersHandler {
             })
 
     })
-    public Mono<ServerResponse> getAllUsers(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getAllUsers() {
 
         return usersService
                 .getAll()

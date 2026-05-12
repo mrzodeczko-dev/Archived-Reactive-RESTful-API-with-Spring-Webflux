@@ -27,7 +27,7 @@ public class MovieEmissionsRouting extends BaseJsonRouter {
                 .path("/movieEmissions", builder -> builder
                         .nest(jsonAccept(), nested -> nested
                                 .POST("", movieEmissionsHandler::addMovieEmission)
-                                .GET("", movieEmissionsHandler::getAllMovieEmissions)
+                                .GET("", _ -> movieEmissionsHandler.getAllMovieEmissions())
                                 .GET("/movieId/{movieId}", movieEmissionsHandler::getAllMovieEmissionsByMovieId)
                                 .GET("/cinemaHallId/{cinemaHallId}", movieEmissionsHandler::getAllMovieEmissionsByCinemaHallId)
                                 .DELETE("/{id}", movieEmissionsHandler::deleteMovieEmissionById)

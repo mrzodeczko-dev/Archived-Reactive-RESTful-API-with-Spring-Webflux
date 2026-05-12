@@ -95,7 +95,7 @@ public class CinemaHallsHandler {
             })
 
     })
-    public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getAll() {
 
         return cinemaHallService
                 .getAll()

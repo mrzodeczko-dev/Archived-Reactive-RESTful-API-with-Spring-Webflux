@@ -1,6 +1,9 @@
 package com.rzodeczko.presentation.routing.handlers;
 
-import com.rzodeczko.application.dto.*;
+import com.rzodeczko.application.dto.AddCinemaToCityDto;
+import com.rzodeczko.application.dto.CityDto;
+import com.rzodeczko.application.dto.CreateCityDto;
+import com.rzodeczko.application.dto.ResponseErrorDto;
 import com.rzodeczko.application.service.CityService;
 import com.rzodeczko.infrastructure.aspect.annotations.Loggable;
 import io.swagger.v3.oas.annotations.Operation;
@@ -89,7 +92,7 @@ public class CitiesHandler {
             })
 
     })
-    public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getAll() {
 
         return cityService.getAll()
                 .collectList()

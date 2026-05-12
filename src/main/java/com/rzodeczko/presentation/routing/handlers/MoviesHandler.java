@@ -4,7 +4,7 @@ import com.rzodeczko.application.dto.*;
 import com.rzodeczko.application.exception.MovieServiceException;
 import com.rzodeczko.application.service.MovieService;
 import com.rzodeczko.infrastructure.aspect.annotations.Loggable;
-import com.rzodeczko.presentation.routing.CurrentUserProvider;
+import com.rzodeczko.presentation.routing.userprovider.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
