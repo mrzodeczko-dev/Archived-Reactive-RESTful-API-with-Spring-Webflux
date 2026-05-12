@@ -97,7 +97,6 @@ public class CinemaService {
     }
 
     private Cinema addCinemaHallToCinema(Cinema cinema, CinemaHall cinemaHall) {
-        cinema.getCinemaHalls().add(cinemaHall);
-        return cinema;
+        return cinema.addCinemaHall(cinemaHall);
     }
 }

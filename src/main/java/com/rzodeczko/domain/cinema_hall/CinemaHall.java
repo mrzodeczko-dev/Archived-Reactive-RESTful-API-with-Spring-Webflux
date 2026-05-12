@@ -4,7 +4,9 @@ import com.rzodeczko.domain.generic.GenericEntity;
 import com.rzodeczko.domain.movie_emission.MovieEmission;
 import com.rzodeczko.domain.vo.Position;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public record CinemaHall(
         String id,
@@ -12,6 +14,11 @@ public record CinemaHall(
         String cinemaId,
         List<MovieEmission> movieEmissions
 ) implements GenericEntity {
+
+    public CinemaHall {
+        positions = positions == null ? new ArrayList<>() : new ArrayList<>(positions);
+        movieEmissions = movieEmissions == null ? new ArrayList<>() : new ArrayList<>(movieEmissions);
+    }
 
     public CinemaHall() {
         this(null, null, null, null);
@@ -58,8 +65,14 @@ public record CinemaHall(
             return this;
         }
         return setMovieEmissions(movieEmissions.stream()
-                .filter(movieEmission -> !movieEmission.getId().equals(movieEmissionId))
+                .filter(movieEmission -> !Objects.equals(movieEmission.getId(), movieEmissionId))
                 .toList());
+    }
+
+    public CinemaHall addMovieEmission(MovieEmission movieEmission) {
+        var updatedMovieEmissions = new ArrayList<>(movieEmissions);
+        updatedMovieEmissions.add(movieEmission);
+        return setMovieEmissions(updatedMovieEmissions);
     }
 
     public static class Builder {

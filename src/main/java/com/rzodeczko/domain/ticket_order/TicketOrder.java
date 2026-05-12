@@ -3,12 +3,14 @@ package com.rzodeczko.domain.ticket_order;
 import com.rzodeczko.domain.generic.GenericEntity;
 import com.rzodeczko.domain.movie_emission.MovieEmission;
 import com.rzodeczko.domain.ticket.Ticket;
+import com.rzodeczko.domain.ticket.enums.TicketStatus;
 import com.rzodeczko.domain.ticket_order.enums.TicketGroupType;
 import com.rzodeczko.domain.ticket_order.enums.TicketOrderStatus;
 import com.rzodeczko.domain.ticket_purchase.TicketPurchase;
 import com.rzodeczko.domain.user.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public record TicketOrder(
@@ -20,6 +22,10 @@ public record TicketOrder(
         List<Ticket> tickets,
         TicketGroupType ticketGroupType
 ) implements GenericEntity {
+
+    public TicketOrder {
+        tickets = tickets == null ? new ArrayList<>() : new ArrayList<>(tickets);
+    }
 
     public TicketOrder() {
         this(null, null, null, null, null, null, null);
@@ -55,17 +61,23 @@ public record TicketOrder(
                 .purchaseDate(LocalDate.now())
                 .ticketGroupType(ticketGroupType)
                 .movieEmission(movieEmission)
-                .tickets(tickets)
+                .tickets(purchasedTickets())
                 .user(user)
                 .build();
     }
 
     public TicketOrder changeOrderStatusToDone() {
-        return setTicketOrderStatus(TicketOrderStatus.DONE);
+        return setTicketOrderStatus(TicketOrderStatus.DONE).setTickets(purchasedTickets());
     }
 
     public TicketOrder changeOrderStatusToCancelled() {
         return setTicketOrderStatus(TicketOrderStatus.CANCELLED);
+    }
+
+    private List<Ticket> purchasedTickets() {
+        return tickets == null ? List.of() : tickets.stream()
+                .map(ticket -> ticket.setTicketStatus(TicketStatus.PURCHASED))
+                .toList();
     }
 
     public static class Builder {

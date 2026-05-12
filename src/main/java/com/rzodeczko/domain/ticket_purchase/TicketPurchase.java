@@ -7,6 +7,7 @@ import com.rzodeczko.domain.ticket_order.enums.TicketGroupType;
 import com.rzodeczko.domain.user.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public record TicketPurchase(
@@ -17,6 +18,10 @@ public record TicketPurchase(
         List<Ticket> tickets,
         TicketGroupType ticketGroupType
 ) implements GenericEntity {
+
+    public TicketPurchase {
+        tickets = tickets == null ? new ArrayList<>() : new ArrayList<>(tickets);
+    }
 
     public TicketPurchase() {
         this(null, null, null, null, null, null);

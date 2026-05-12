@@ -6,6 +6,12 @@ import java.math.BigDecimal;
 
 public record Discount(BigDecimal value) {
 
+    public Discount {
+        if (value == null || value.compareTo(BigDecimal.ZERO) < 0 || value.compareTo(BigDecimal.ONE) > 0) {
+            throw new DiscountException("discount value is out of range");
+        }
+    }
+
     public Discount() {
         this(BigDecimal.ZERO);
     }

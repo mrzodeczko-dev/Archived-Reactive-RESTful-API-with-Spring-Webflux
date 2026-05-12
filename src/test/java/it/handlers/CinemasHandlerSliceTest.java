@@ -148,6 +148,6 @@ class CinemasHandlerSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(CreateCinemaHallDto.builder().rowNo(10).colNo(20).build())
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().is4xxClientError();
     }
 }

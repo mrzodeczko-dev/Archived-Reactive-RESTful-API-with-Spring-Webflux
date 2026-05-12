@@ -1,7 +1,9 @@
 package it.testcontainers;
 
 import com.rzodeczko.CinemaApplication;
+import com.rzodeczko.infrastructure.persistence.config.ConvertersConfig;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -24,6 +26,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 @Testcontainers
 @ActiveProfiles("testcontainers")
+@Import(ConvertersConfig.class)
 public abstract class AbstractMongoIT {
 
     static final MongoDBContainer MONGO;

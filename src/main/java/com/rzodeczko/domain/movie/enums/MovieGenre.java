@@ -8,6 +8,7 @@ public enum MovieGenre {
 
     DRAMA("Drama"),
     COMEDY("Comedy"),
+    ACTION("Action"),
     THRILLER("Thriller"),
     DARK_COMEDY("Dark comedy");
 
@@ -25,5 +26,12 @@ public enum MovieGenre {
         return Arrays.stream(MovieGenre.values())
                 .map(MovieGenre::getDesc)
                 .collect(Collectors.toList());
+    }
+
+    public static MovieGenre fromDesc(String desc) {
+        return Arrays.stream(MovieGenre.values())
+                .filter(movieGenre -> movieGenre.desc.equals(desc))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown movie genre: " + desc));
     }
 }

@@ -8,6 +8,12 @@ import static java.util.Objects.isNull;
 
 public record Money(BigDecimal value) {
 
+    public Money {
+        if (isNull(value) || value.compareTo(BigDecimal.ZERO) < 0) {
+            throw new DiscountException("Money value is not correct");
+        }
+    }
+
     public Money() {
         this(BigDecimal.ZERO);
     }
@@ -37,6 +43,9 @@ public record Money(BigDecimal value) {
     }
 
     public Money multiply(Integer quantity) {
+        if (isNull(quantity) || quantity < 0) {
+            throw new DiscountException("Money multiplier is not correct");
+        }
         return new Money(this.value.multiply(BigDecimal.valueOf(quantity)));
     }
 

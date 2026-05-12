@@ -76,7 +76,7 @@ public class TicketOrderService {
                                                 .map(td -> Ticket.builder()
                                                         .position(td.position())
                                                         .type(td.individualTicketType())
-                                                        .ticketStatus(TicketStatus.PURCHASED)
+                                                        .ticketStatus(TicketStatus.ORDERED)
                                                         .discount(createTicketOrderDto.getBaseDiscount()
                                                                 .add(td.individualTicketType().getDiscount()))
                                                         .build())
@@ -95,15 +95,18 @@ public class TicketOrderService {
             return Mono.error(new TicketOrderServiceException("Order id is null"));
         }
 
-        return ticketOrderPort.findById(orderId)
+        Mono<TicketOrder> result = ticketOrderPort.findById(orderId)
                 .switchIfEmpty(Mono.error(new TicketOrderServiceException("No order with id: %s".formatted(orderId))))
                 .flatMap(ticketOrder -> {
                     if (!Objects.equals(ticketOrder.getUser().getUsername(), username)) {
                         return Mono.error(new TicketOrderServiceException("That ticket order does not belong to you"));
                     }
-                    return Mono.just(ticketOrder.changeOrderStatusToCancelled());
-                })
-                .map(TicketOrderMapper::toDto);
+                    if (ticketOrder.getTicketOrderStatus() != TicketOrderStatus.ORDERED) {
+                        return Mono.error(new TicketOrderServiceException("Only ordered tickets can be cancelled"));
+                    }
+                    return ticketOrderPort.addOrUpdate(ticketOrder.changeOrderStatusToCancelled());
+                });
+        return transactionPort.inTransaction(result).map(TicketOrderMapper::toDto);
     }
 
     public Flux<TicketOrderDto> getAllTicketOrdersForLoggedUser(String username) {

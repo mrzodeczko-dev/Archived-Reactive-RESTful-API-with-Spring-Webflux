@@ -3,6 +3,7 @@ package it.handlers;
 import com.rzodeczko.application.dto.CreateTicketOrderDto;
 import com.rzodeczko.application.dto.TicketOrderDto;
 import com.rzodeczko.application.service.TicketOrderService;
+import com.rzodeczko.domain.ticket_order.enums.TicketGroupType;
 import com.rzodeczko.presentation.routing.TicketOrdersRouting;
 import com.rzodeczko.presentation.routing.handlers.TicketOrderHandler;
 import com.rzodeczko.presentation.routing.userprovider.CurrentUserProvider;
@@ -75,6 +76,7 @@ class TicketOrderHandlerSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(CreateTicketOrderDto.builder()
                         .movieEmissionId("e-1")
+                        .ticketGroupType(TicketGroupType.NORMAL)
                         .build())
                 .exchange()
                 .expectStatus().isCreated()

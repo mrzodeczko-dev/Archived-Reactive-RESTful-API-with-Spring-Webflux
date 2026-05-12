@@ -2,6 +2,7 @@ package com.rzodeczko.application.service;
 
 import com.rzodeczko.application.exception.TicketOrderServiceException;
 import com.rzodeczko.application.port.out.MovieEmissionPort;
+import com.rzodeczko.application.port.out.TransactionPort;
 import com.rzodeczko.application.port.out.TicketOrderPort;
 import com.rzodeczko.application.port.out.TicketPort;
 import com.rzodeczko.application.port.out.UserPort;
@@ -19,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -28,6 +28,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +46,7 @@ class TicketOrderServiceTest {
     @Mock
     private CreateTicketsOrderDtoValidator createTicketsOrderDtoValidator;
     @Mock
-    private TransactionalOperator transactionalOperator;
+    private TransactionPort transactionPort;
 
     @InjectMocks
     private TicketOrderService ticketOrderService;
@@ -69,6 +71,7 @@ class TicketOrderServiceTest {
                 .orderDate(LocalDate.now())
                 .ticketOrderStatus(TicketOrderStatus.ORDERED)
                 .build();
+        lenient().when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -119,9 +122,14 @@ class TicketOrderServiceTest {
     @DisplayName("cancelOrder — owner can cancel: status changes to CANCELLED")
     void cancelOrder_whenOwnerCancels_shouldReturnCancelledOrder() {
         when(ticketOrderRepository.findById("order-1")).thenReturn(Mono.just(sampleOrder));
+        when(ticketOrderRepository.addOrUpdate(any(TicketOrder.class)))
+                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         StepVerifier.create(ticketOrderService.cancelOrder("test@example.com", "order-1"))
-                .assertNext(dto -> assertThat(dto.id()).isEqualTo("order-1"))
+                .assertNext(dto -> {
+                    assertThat(dto.id()).isEqualTo("order-1");
+                    assertThat(dto.ticketOrderStatus()).isEqualTo(TicketOrderStatus.CANCELLED);
+                })
                 .verifyComplete();
     }
 

@@ -13,6 +13,7 @@ import com.rzodeczko.domain.cinema_hall.CinemaHall;
 import com.rzodeczko.domain.ticket.Ticket;
 import com.rzodeczko.domain.ticket.enums.TicketStatus;
 import com.rzodeczko.domain.ticket_order.TicketOrder;
+import com.rzodeczko.domain.ticket_order.enums.TicketOrderStatus;
 import com.rzodeczko.domain.ticket_purchase.TicketPurchase;
 import com.rzodeczko.domain.vo.Discount;
 import com.rzodeczko.domain.vo.Money;
@@ -91,7 +92,7 @@ public class TicketPurchaseService {
                         .purchaseDate(LocalDate.now())
                         .ticketGroupType(createPurchaseDto.ticketGroupType())
                         .user(tuple.getT2())
-                        .movieEmission(movieEmission)
+                        .movieEmission(tuple.getT1())
                         .tickets(createPurchaseDto.ticketsDetails()
                                 .stream()
                                 .map(ticketDetailsDto -> {
@@ -111,7 +112,8 @@ public class TicketPurchaseService {
                         .build()))
                 .flatMap(ticketPurchase ->
                         ticketPort.addOrUpdateMany(ticketPurchase.getTickets())
-                                .then(ticketPurchasePort.addOrUpdate(ticketPurchase)));
+                                .collectList()
+                                .flatMap(savedTickets -> ticketPurchasePort.addOrUpdate(ticketPurchase.setTickets(savedTickets))));
 
         return transactionPort.inTransaction(result).map(TicketPurchaseMapper::toDto);
     }
@@ -129,9 +131,14 @@ public class TicketPurchaseService {
                 .switchIfEmpty(Mono.error(new TicketPurchaseServiceException(
                         "No ticket order with id: %s".formatted(ticketOrderId))))
                 .flatMap(ticketOrder -> validateTicketOrderOwnership(ticketOrder, username))
-                .flatMap(ticketOrder ->
-                        ticketOrderPort.addOrUpdate(ticketOrder.changeOrderStatusToDone())
-                                .then(ticketPurchasePort.addOrUpdate(ticketOrder.toTicketPurchase())));
+                .flatMap(ticketOrder -> {
+                    var ticketPurchase = ticketOrder.toTicketPurchase();
+                    return ticketPort.addOrUpdateMany(ticketPurchase.getTickets())
+                                .collectList()
+                                .flatMap(purchasedTickets -> ticketOrderPort
+                                        .addOrUpdate(ticketOrder.changeOrderStatusToDone().setTickets(purchasedTickets))
+                                        .then(ticketPurchasePort.addOrUpdate(ticketPurchase.setTickets(purchasedTickets))));
+                });
 
         return transactionPort.inTransaction(result).map(TicketPurchaseMapper::toDto);
     }
@@ -139,6 +146,9 @@ public class TicketPurchaseService {
     private Mono<TicketOrder> validateTicketOrderOwnership(TicketOrder ticketOrder, String username) {
         if (!Objects.equals(username, ticketOrder.getUser().getUsername())) {
             return Mono.error(new TicketPurchaseServiceException("Ticket order is not done by you!"));
+        }
+        if (ticketOrder.getTicketOrderStatus() != TicketOrderStatus.ORDERED) {
+            return Mono.error(new TicketPurchaseServiceException("Only ordered tickets can be purchased"));
         }
         if (ticketOrder.getMovieEmission().getStartDateTime().toLocalDate()
                 .compareTo(LocalDate.now().minusDays(1)) < 0) {

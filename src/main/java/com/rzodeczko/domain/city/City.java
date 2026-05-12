@@ -4,7 +4,6 @@ import com.rzodeczko.domain.cinema.Cinema;
 import com.rzodeczko.domain.generic.GenericEntity;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static java.util.Objects.isNull;
@@ -14,6 +13,10 @@ public record City(
         String name,
         List<Cinema> cinemas
 ) implements GenericEntity {
+
+    public City {
+        cinemas = cinemas == null ? new ArrayList<>() : new ArrayList<>(cinemas);
+    }
 
     public City() {
         this(null, null, null);
@@ -31,11 +34,9 @@ public record City(
     public City setCinemas(List<Cinema> cinemas) { return new City(id, name, cinemas); }
 
     public City addCinema(Cinema cinema) {
-        if (isNull(cinemas)) {
-            return setCinemas(new ArrayList<>(Collections.singletonList(cinema)));
-        }
-        cinemas.add(cinema);
-        return this;
+        var updatedCinemas = isNull(cinemas) ? new ArrayList<Cinema>() : new ArrayList<>(cinemas);
+        updatedCinemas.add(cinema);
+        return setCinemas(updatedCinemas);
     }
 
     public static class Builder {

@@ -93,10 +93,8 @@ public class MovieEmissionService {
                                             .build())
                             .map(movieEmission -> Pair.of(pair.getLeft(), movieEmission));
                 })
-                .flatMap(pair -> {
-                    pair.getLeft().getMovieEmissions().add(pair.getRight());
-                    return cinemaHallPort.addOrUpdate(pair.getLeft()).then(Mono.just(pair.getRight()));
-                });
+                .flatMap(pair -> cinemaHallPort.addOrUpdate(pair.getLeft().addMovieEmission(pair.getRight()))
+                        .then(Mono.just(pair.getRight())));
 
         return transactionPort.inTransaction(result).map(MovieEmissionMapper::toDto);
     }

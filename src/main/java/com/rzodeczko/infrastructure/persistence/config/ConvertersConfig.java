@@ -20,6 +20,8 @@ public class ConvertersConfig {
                         new StringToLocalDateTimeConverter(),
                         new MoneyToStringConverter(),
                         new StringToMoneyConverter(),
+                        new PositionToStringConverter(),
+                        new StringToPositionConverter(),
                         new PositionMapToDocumentConverter()
                 ));
     }

@@ -35,7 +35,7 @@ public record User(
         this.password = password;
         this.role = role != null ? role : Role.ROLE_USER;
         this.birthDate = birthDate;
-        this.favoriteMovies = favoriteMovies;
+        this.favoriteMovies = favoriteMovies == null ? new ArrayList<>() : new ArrayList<>(favoriteMovies);
         this.email = email;
     }
 
@@ -101,13 +101,9 @@ public record User(
     }
 
     public User addMovieToFavorites(Movie movie) {
-        if (isNull(favoriteMovies)) {
-            var movies = new ArrayList<Movie>();
-            movies.add(movie);
-            return setFavoriteMovies(movies);
-        }
-        favoriteMovies.add(movie);
-        return this;
+        var movies = isNull(favoriteMovies) ? new ArrayList<Movie>() : new ArrayList<>(favoriteMovies);
+        movies.add(movie);
+        return setFavoriteMovies(movies);
     }
 
     @Override

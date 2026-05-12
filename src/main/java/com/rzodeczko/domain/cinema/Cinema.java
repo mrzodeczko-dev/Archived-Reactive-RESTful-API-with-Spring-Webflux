@@ -3,6 +3,7 @@ package com.rzodeczko.domain.cinema;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
 import com.rzodeczko.domain.generic.GenericEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public record Cinema(
@@ -11,6 +12,10 @@ public record Cinema(
         String street,
         List<CinemaHall> cinemaHalls
 ) implements GenericEntity {
+
+    public Cinema {
+        cinemaHalls = cinemaHalls == null ? new ArrayList<>() : new ArrayList<>(cinemaHalls);
+    }
 
     public Cinema() {
         this(null, null, null, null);
@@ -59,6 +64,12 @@ public record Cinema(
         var updatedCinemaHalls = cinemaHalls.stream()
                 .map(cinemaHall -> cinemaHall.setCinemaId(cinemaId))
                 .toList();
+        return setCinemaHalls(updatedCinemaHalls);
+    }
+
+    public Cinema addCinemaHall(CinemaHall cinemaHall) {
+        var updatedCinemaHalls = new ArrayList<>(cinemaHalls);
+        updatedCinemaHalls.add(cinemaHall);
         return setCinemaHalls(updatedCinemaHalls);
     }
 
