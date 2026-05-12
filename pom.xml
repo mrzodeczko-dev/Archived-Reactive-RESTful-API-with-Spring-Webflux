@@ -368,9 +368,18 @@
                                     <goal>verify</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- Only SliceTest handlers — configuration must be inside <execution> -->
+                                    <!--
+                                        Failsafe by default only picks up *IT.java, IT*.java, *ITCase.java.
+                                        *SliceTest.java does not match any of those patterns, so failsafe
+                                        silently skips every handler test regardless of <includes>.
+                                        Resetting <excludes> to empty forces failsafe to rely solely on
+                                        the <includes> below and actually execute SliceTest classes.
+                                    -->
+                                    <excludes>
+                                        <exclude>nothing</exclude>
+                                    </excludes>
                                     <includes>
-                                        <include>**/handlers/**/*SliceTest.java</include>
+                                        <include>it/handlers/*SliceTest.java</include>
                                     </includes>
                                 </configuration>
                             </execution>
@@ -401,9 +410,12 @@
                                     <goal>verify</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- Only *IT.java testcontainers — configuration must be inside <execution> -->
+                                    <!--
+                                        Precise path: src/test/java/it/testcontainers/repository/*IT.java
+                                        AbstractMongoIT is abstract — failsafe skips abstract classes automatically.
+                                    -->
                                     <includes>
-                                        <include>**/testcontainers/**/*IT.java</include>
+                                        <include>it/testcontainers/repository/*IT.java</include>
                                     </includes>
                                 </configuration>
                             </execution>
