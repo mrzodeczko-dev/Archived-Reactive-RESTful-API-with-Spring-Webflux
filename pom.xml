@@ -275,6 +275,7 @@
                         <include>**/*Test.java</include>
                     </includes>
                     <excludes>
+                        <!-- SliceTest trafia do failsafe w profilu it-handlers -->
                         <exclude>**/*SliceTest.java</exclude>
                     </excludes>
                 </configuration>
@@ -289,9 +290,10 @@
                 </configuration>
                 <executions>
                     <!--
-                        Disable the built-in default failsafe execution. Without this, failsafe always executes **/*IT.java
-                        regardless of the profile, which causes test containers to execute in both IT profiles.
-                        Each profile defines its own <execution> with precise <includes>.
+                        Disable the built-in default failsafe execution. Without this, failsafe
+                        always picks up **/*IT.java regardless of the active profile, causing
+                        integration tests to run in both IT profiles. Each profile defines its
+                        own <execution> with explicit <includes>.
                     -->
                     <execution>
                         <id>default</id>
@@ -361,16 +363,16 @@
                             <execution>
                                 <id>handlers</id>
                                 <phase>integration-test</phase>
-                                <configuration>
-                                    <!-- Only SliceTesta handlers -->
-                                    <includes>
-                                        <include>**/handlers/*SliceTest.java</include>
-                                    </includes>
-                                </configuration>
                                 <goals>
                                     <goal>integration-test</goal>
                                     <goal>verify</goal>
                                 </goals>
+                                <configuration>
+                                    <!-- Only SliceTest handlers — configuration must be inside <execution> -->
+                                    <includes>
+                                        <include>**/handlers/**/*SliceTest.java</include>
+                                    </includes>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -394,16 +396,16 @@
                             <execution>
                                 <id>testcontainers</id>
                                 <phase>integration-test</phase>
-                                <configuration>
-                                    <!-- only *IT.java testcontainers -->
-                                    <includes>
-                                        <include>**/testcontainers/*IT.java</include>
-                                    </includes>
-                                </configuration>
                                 <goals>
                                     <goal>integration-test</goal>
                                     <goal>verify</goal>
                                 </goals>
+                                <configuration>
+                                    <!-- Only *IT.java testcontainers — configuration must be inside <execution> -->
+                                    <includes>
+                                        <include>**/testcontainers/**/*IT.java</include>
+                                    </includes>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
