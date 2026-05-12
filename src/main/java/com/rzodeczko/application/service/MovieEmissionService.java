@@ -22,12 +22,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -177,19 +175,15 @@ public class MovieEmissionService {
     }
 
     public Flux<MovieEmissionDto> uploadCSVFile(InputStream inputStream) {
-        var errorsList = Collections.synchronizedList(new ArrayList<String>());
-
-        return movieEmissionCsvParserPort.parse(inputStream, errorsList)
-                .collectList()
-                .flatMapMany(movieEmissions -> saveMovieEmissions(movieEmissions, errorsList));
-    }
-
-    private Flux<MovieEmissionDto> saveMovieEmissions(List<CreateMovieEmissionDto> movieEmissions, List<String> errorsList) {
-        if (!errorsList.isEmpty()) {
-            return Flux.error(new MovieEmissionServiceException("Errors are: %s".formatted(errorsList)));
-        }
-        return transactionPort.inTransactionMany(Flux.fromIterable(movieEmissions).concatMap(this::saveMovieEmission))
-                .map(MovieEmissionMapper::toDto);
+        return movieEmissionCsvParserPort.parse(inputStream)
+                .flatMapMany(result -> {
+                    if (result.hasErrors()) {
+                        return Flux.error(new MovieEmissionServiceException("Errors are: %s".formatted(result.errors())));
+                    }
+                    return transactionPort.inTransactionMany(
+                            Flux.fromIterable(result.items()).concatMap(this::saveMovieEmission)
+                    ).map(MovieEmissionMapper::toDto);
+                });
     }
 
     private LocalDateTime toLocalDateTime(String stringValue) {

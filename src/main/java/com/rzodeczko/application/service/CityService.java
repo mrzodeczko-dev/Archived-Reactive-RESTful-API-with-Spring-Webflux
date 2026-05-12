@@ -18,11 +18,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CityService {
@@ -85,33 +83,32 @@ public class CityService {
     }
 
     public Flux<CityDto> uploadCSVFile(InputStream inputStream) {
-        var errorsList = Collections.synchronizedList(new ArrayList<String>());
-        var counter = new AtomicInteger(1);
-
-        return cityCsvParserPort.parse(inputStream, errorsList)
-                .map(CreateCityDto::toEntity)
-                .flatMap(city -> doCityExistsInDb(city, errorsList, counter))
-                .collectList()
-                .flatMap(cities -> saveCities(cities, errorsList))
-                .flatMapMany(Function.identity());
-    }
-
-    private Mono<City> doCityExistsInDb(City city, List<String> errorsList, AtomicInteger counter) {
-        return cityPort.findByName(city.getName())
-                .hasElement()
-                .map(isPresent -> {
-                    var counterVal = counter.getAndIncrement();
-                    if (isPresent) {
-                        errorsList.add("City in row no. %s is not unique by name".formatted(counterVal));
+        return cityCsvParserPort.parse(inputStream)
+                .flatMapMany(parseResult -> {
+                    if (parseResult.hasErrors()) {
+                        return Flux.error(new CityServiceException("Errors are: %s".formatted(parseResult.errors())));
                     }
-                    return city;
-                });
-    }
 
-    private Mono<Flux<CityDto>> saveCities(List<City> cities, List<String> errorsList) {
-        if (!errorsList.isEmpty()) {
-            return Mono.error(new CityServiceException("Errors are: %s".formatted(errorsList)));
-        }
-        return Mono.just(transactionPort.inTransactionMany(cityPort.addOrUpdateMany(cities)).map(CityMapper::toDto));
+                    var cities = parseResult.items().stream()
+                            .map(CreateCityDto::toEntity)
+                            .toList();
+                    return Flux.fromIterable(cities)
+                            .index()
+                            .concatMap(indexed -> cityPort.findByName(indexed.getT2().getName())
+                                    .hasElement()
+                                    .mapNotNull(exists -> exists
+                                            ? "City in row no. %s is not unique by name".formatted(indexed.getT1() + 1)
+                                            : null))
+                            .collectList()
+                            .flatMapMany(results -> {
+                                var errors = results.stream().toList();
+                                if (!errors.isEmpty()) {
+                                    return Flux.error(new CityServiceException("Errors are: %s".formatted(errors)));
+                                }
+                                return transactionPort
+                                        .inTransactionMany(cityPort.addOrUpdateMany(cities))
+                                        .map(CityMapper::toDto);
+                            });
+                });
     }
 }

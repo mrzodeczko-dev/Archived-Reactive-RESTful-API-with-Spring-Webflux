@@ -19,11 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.Objects;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -90,7 +86,7 @@ public class MovieService {
             return Flux.error(() -> new MovieServiceException(
                     """
                             Movie duration is not set correctly!
-                            
+
                             Conditions to met:
                             1) At least one boundary movie duration should be set,
                             2) Variable minDuration must not be greater than maxDuration (if defined),
@@ -172,38 +168,36 @@ public class MovieService {
                 .map(MovieMapper::toDto);
     }
 
-    private Mono<Movie> doMovieExistsInDb(Movie movie, List<String> errorsList, AtomicInteger counter) {
-        return moviePort.findByNameAndGenre(movie.getName(), movie.getGenre())
-                .hasElement()
-                .map(isPresent -> {
-                    var counterVal = counter.getAndIncrement();
-                    if (isPresent) {
-                        errorsList.add("Movie in row no. %s is not unique by name nad genre".formatted(counterVal));
-                    }
-                    return movie;
-                })
-                .then(Mono.just(movie));
-    }
-
     public Flux<MovieDto> uploadCSVFile(final InputStream inputStream) {
+        return movieCsvParserPort.parse(inputStream)
+                .flatMapMany(parseResult -> {
+                    if (parseResult.hasErrors()) {
+                        return Flux.error(new MovieServiceException("Errors are: %s".formatted(parseResult.errors())));
+                    }
 
-        var errorsList = Collections.synchronizedList(new ArrayList<String>());
-        var counter = new AtomicInteger(1);
+                    var movies = parseResult.items().stream()
+                            .map(CreateMovieDto::toEntity)
+                            .toList();
 
-        return movieCsvParserPort.parse(inputStream, errorsList)
-                .map(CreateMovieDto::toEntity)
-                .flatMap(movie -> doMovieExistsInDb(movie, errorsList, counter))
-                .collectList()
-                .flatMap(movies -> saveMovies(movies, errorsList))
-                .flatMapMany(Function.identity());
-
-    }
-
-    private Mono<Flux<MovieDto>> saveMovies(List<Movie> movies, List<String> errorsList) {
-        if (!errorsList.isEmpty()) {
-            return Mono.error(new MovieServiceException("Errors are: %s".formatted(errorsList)));
-        }
-        return Mono.just(moviePort.addOrUpdateMany(movies).map(MovieMapper::toDto));
+                    return Flux.fromIterable(movies)
+                            .index()
+                            .concatMap(indexed -> {
+                                var movie = indexed.getT2();
+                                return moviePort.findByNameAndGenre(movie.getName(), movie.getGenre())
+                                        .hasElement()
+                                        .mapNotNull(exists -> exists
+                                                ? "Movie in row no. %s is not unique by name and genre".formatted(indexed.getT1() + 1)
+                                                : null);
+                            })
+                            .collectList()
+                            .flatMapMany(results -> {
+                                var errors = results.stream().filter(Objects::nonNull).toList();
+                                if (!errors.isEmpty()) {
+                                    return Flux.error(new MovieServiceException("Errors are: %s".formatted(errors)));
+                                }
+                                return moviePort.addOrUpdateMany(movies).map(MovieMapper::toDto);
+                            });
+                });
     }
 
     public Mono<MovieDto> deleteMovieById(final String id) {

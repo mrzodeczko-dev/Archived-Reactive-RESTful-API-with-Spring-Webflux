@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -96,19 +95,17 @@ public class CinemaHallService {
     }
 
     public Flux<CinemaHallDto> uploadCSVFile(String cinemaId, InputStream inputStream) {
-        var errorsList = Collections.synchronizedList(new ArrayList<String>());
-
-        return cinemaHallCsvParserPort.parse(inputStream, errorsList)
-                .map(dto -> new AddCinemaHallToCinemaDto(dto.rowNo(), dto.colNo(), cinemaId))
-                .collectList()
-                .flatMapMany(cinemaHalls -> saveCinemaHalls(cinemaHalls, errorsList));
-    }
-
-    private Flux<CinemaHallDto> saveCinemaHalls(List<AddCinemaHallToCinemaDto> cinemaHalls, List<String> errorsList) {
-        if (!errorsList.isEmpty()) {
-            return Flux.error(new CinemaHallServiceException("Errors are: %s".formatted(errorsList)));
-        }
-        return transactionPort.inTransactionMany(Flux.fromIterable(cinemaHalls).concatMap(this::saveCinemaHallToCinema))
-                .map(CinemaHallMapper::toDto);
+        return cinemaHallCsvParserPort.parse(inputStream)
+                .flatMapMany(result -> {
+                    if (result.hasErrors()) {
+                        return Flux.error(new CinemaHallServiceException("Errors are: %s".formatted(result.errors())));
+                    }
+                    var cinemaHalls = result.items().stream()
+                            .map(dto -> new AddCinemaHallToCinemaDto(dto.rowNo(), dto.colNo(), cinemaId))
+                            .toList();
+                    return transactionPort.inTransactionMany(
+                            Flux.fromIterable(cinemaHalls).concatMap(this::saveCinemaHallToCinema)
+                    ).map(CinemaHallMapper::toDto);
+                });
     }
 }
