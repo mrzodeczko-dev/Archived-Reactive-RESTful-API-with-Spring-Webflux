@@ -122,6 +122,7 @@ public class WebSecurityConfig {
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
                         .pathMatchers("/register").permitAll()
                         .pathMatchers("/login").permitAll()
+                        .pathMatchers("/refresh").permitAll()
 
                         .pathMatchers("/users/**").hasRole("ADMIN")
 

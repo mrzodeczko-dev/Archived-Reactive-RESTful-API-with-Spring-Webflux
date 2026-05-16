@@ -6,6 +6,7 @@ import com.rzodeczko.infrastructure.security.dto.TokensDto;
 import com.rzodeczko.infrastructure.security.tokens.AppTokensService;
 import com.rzodeczko.presentation.routing.LoginRouting;
 import com.rzodeczko.presentation.routing.handlers.LoginHandler;
+import com.rzodeczko.presentation.routing.handlers.RefreshHandler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.when;
 @Import({
         LoginRouting.class,
         LoginHandler.class,
+        RefreshHandler.class,
         AbstractHandlerSliceTest.Configs.class
 })
 @ActiveProfiles("handlers")

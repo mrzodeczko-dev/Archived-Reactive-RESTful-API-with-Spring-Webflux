@@ -1,5 +1,6 @@
 package com.rzodeczko.infrastructure.security.tokens;
 
+import com.rzodeczko.application.exception.AuthenticationException;
 import com.rzodeczko.application.port.out.UserPort;
 import com.rzodeczko.infrastructure.security.dto.TokensDto;
 import io.jsonwebtoken.Claims;
@@ -32,6 +33,25 @@ public class AppTokensService {
                         "Generate tokens failed: user not found: " + user.getUsername()
                 )))
                 .flatMap(userFromDb -> Mono.fromCallable(() -> buildTokens(userFromDb.getId()))
+                        .subscribeOn(Schedulers.boundedElastic()));
+    }
+
+    public Mono<TokensDto> refreshTokens(String refreshToken) {
+        return Mono.fromCallable(() -> extractClaims(refreshToken))
+                .subscribeOn(Schedulers.boundedElastic())
+                .onErrorMap(e -> !(e instanceof AuthenticationException), _ -> new AuthenticationException("Invalid refresh token"))
+                .flatMap(claims -> {
+                    if (!claims.getExpiration().after(new Date())) {
+                        return Mono.error(new AuthenticationException("Refresh token has expired"));
+                    }
+                    if (!claims.containsKey(jwtProperties.refreshToken().accessTokenKey())) {
+                        return Mono.error(new AuthenticationException("Provided token is not a refresh token"));
+                    }
+                    return Mono.just(claims.getSubject());
+                })
+                .flatMap(userId -> userPort.findById(userId)
+                        .switchIfEmpty(Mono.error(() -> new AuthenticationException("User not found"))))
+                .flatMap(user -> Mono.fromCallable(() -> buildTokens(user.getId()))
                         .subscribeOn(Schedulers.boundedElastic()));
     }
 

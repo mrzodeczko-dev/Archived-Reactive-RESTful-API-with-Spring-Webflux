@@ -108,9 +108,10 @@ sequenceDiagram
 
 1. **Registration** — public endpoint; BCrypt hashing runs on `boundedElastic`.
 2. **Login** — issues JWT access token (HS512, 5 min) + refresh token (8 h); signing runs on `boundedElastic`.
-3. **Authenticated requests** — `SecurityContextRepository` + `AuthenticationManager` parse the bearer token and populate the reactive security context.
-4. **Ticket ordering** — reserves seats atomically inside a **MongoDB distributed transaction**.
-5. **Ticket purchase** — finalises an order in a transaction, then sends a confirmation email via SMTP (offloaded to `boundedElastic` with retries).
+3. **Token refresh** — `POST /refresh` accepts the refresh JWT in the request body, validates its signature and expiry, verifies it is not an access token (via the `AccessTokenKey` claim), then issues a new access + refresh token pair (token rotation). Runs on `boundedElastic`.
+4. **Authenticated requests** — `SecurityContextRepository` + `AuthenticationManager` parse the bearer token and populate the reactive security context.
+5. **Ticket ordering** — reserves seats atomically inside a **MongoDB distributed transaction**.
+6. **Ticket purchase** — finalises an order in a transaction, then sends a confirmation email via SMTP (offloaded to `boundedElastic` with retries).
 
 ---
 
@@ -192,6 +193,7 @@ Authentication is JWT-based. Each account has role **USER** or **ADMIN**. ADMIN 
 |---|:---:|:---:|:---:|
 | `POST /register` | ✅ | | |
 | `POST /login` | ✅ | | |
+| `POST /refresh` | ✅ | | |
 | `/docs`, `/v3/api-docs/**` (Swagger) | ✅ | | |
 | `/actuator/health` | ✅ | | |
 | `GET /cities/**` | | ✅ | |
@@ -230,6 +232,7 @@ Base URL (local): `http://localhost:8080`. Authentication via `Authorization: Be
 |---|---|---|---|
 | `POST` | `/register` | Create a new account | Public |
 | `POST` | `/login` | Issue access + refresh JWTs | Public |
+| `POST` | `/refresh` | Rotate tokens using a valid refresh JWT | Public |
 | `GET` | `/users` | List all users | ADMIN |
 | `GET` | `/users/username/{username}` | Get user by username | ADMIN |
 | `POST` | `/users/promoteToAdmin/username/{username}` | Grant ADMIN role | ADMIN |
@@ -515,7 +518,7 @@ Every CPU-bound or blocking call is wrapped in `Mono.fromCallable(...)` and offl
 - **Schedulers discipline** — every CPU-bound or blocking call explicitly offloaded to `Schedulers.boundedElastic()`.
 - **Liquibase migrations** — versioned YAML changesets applied by a dedicated Compose service before the app starts; tracked in MongoDB.
 - **Async admin bootstrap with health gate** — `AdminBootstrapper` runs asynchronously (non-blocking startup) with retry/backoff; `AdminBootstrapHealthIndicator` keeps `/actuator/health` in DOWN state until bootstrap succeeds. This prevents traffic to an app without an admin account.
-- **JWT with refresh tokens** — HS512-signed access tokens (5 min) + refresh tokens (8 h).
+- **JWT with token rotation** — HS512-signed access tokens (5 min) + refresh tokens (8 h). `POST /refresh` validates the refresh JWT, rejects access tokens passed by mistake (via the `AccessTokenKey` claim check), and issues a fresh token pair on every call (rotation).
 - **Hexagonal layering** — domain free of Spring / Mongo / Lombok; ports in `application.port.out`, adapters in `infrastructure`; services expose `Mono`/`Flux` for end-to-end pipeline composition.
 - **Immutable domain objects** — Java records with "wither" methods; value objects validate invariants in the canonical constructor.
 - **Request ID tracing** — `RequestIdWebFilter` attaches a UUID `X-Request-Id` to every request; echoed in response headers and included in every error body.
