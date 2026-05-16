@@ -30,8 +30,8 @@ public class TicketBaseValidationUtils {
 
     public static boolean areTicketDetailsValid(List<TicketDetailsDto> ticketDetails) {
         return nonNull(ticketDetails) && !ticketDetails.isEmpty()
-                && arePositionsUnique(ticketDetails.stream().map(TicketDetailsDto::position).collect(Collectors.toList()))
-                && ticketDetails.stream().allMatch(TicketBaseValidationUtils::isSingleTicketDetailValid);
+                && ticketDetails.stream().allMatch(TicketBaseValidationUtils::isSingleTicketDetailValid)
+                && arePositionsUnique(ticketDetails.stream().map(TicketDetailsDto::position).collect(Collectors.toList()));
     }
 
     private static boolean isSingleTicketDetailValid(TicketDetailsDto ticketDetailsDto) {

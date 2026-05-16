@@ -5,6 +5,7 @@
 [![WebFlux](https://img.shields.io/badge/Spring-WebFlux-6db33f.svg)](https://docs.spring.io/spring-framework/reference/web/webflux.html)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Replica%20Set-green.svg)](https://www.mongodb.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![codecov](https://codecov.io/github/mrzodeczko-dev/Reactive-RESTful-API-Cinema-Ticketing-Platform-Spring-WebFlux-/graph/badge.svg?token=SYA4ORC8TH)](https://codecov.io/github/mrzodeczko-dev/Reactive-RESTful-API-Cinema-Ticketing-Platform-Spring-WebFlux-)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 >  Originally built as a learning exercise on Spring Boot 2.4.4 / Java 17, then iteratively migrated to **Spring Boot 4.0.5 / Java 25** and refactored into a hexagonal / DDD-inspired layout. Kept for reference and portfolio purposes — see [Migration History](#migration-history).
