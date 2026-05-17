@@ -63,6 +63,19 @@ public class UsersService {
                 .map(UserMapper::toDto);
     }
 
+    public Mono<UserDto> deleteByUsername(String username) {
+        return transactionPort.inTransaction(userPort
+                .deleteByUsername(username)
+                .switchIfEmpty(Mono.error(() -> new UserServiceException("No user with username: %s".formatted(username))))
+                .map(UserMapper::toDto));
+    }
+
+    public Flux<UserDto> deleteAll() {
+        return transactionPort
+                .inTransactionMany(userPort.deleteAll())
+                .map(UserMapper::toDto);
+    }
+
     /**
      * Promotes an existing user to ADMIN role. Implementation only updates the {@code role} field
      * of the existing document — the user keeps the same id, email, favorite movies and history.

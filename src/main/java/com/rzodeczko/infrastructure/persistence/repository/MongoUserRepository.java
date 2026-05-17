@@ -8,4 +8,9 @@ public interface MongoUserRepository extends ReactiveMongoRepository<UserDocumen
     Mono<UserDocument> findByUsername(String username);
 
     Mono<UserDocument> findByEmail(String email);
+
+    default Mono<UserDocument> deleteByUsername(String username) {
+        return findByUsername(username)
+                .flatMap(userDocument -> deleteById(userDocument.getId()).thenReturn(userDocument));
+    }
 }

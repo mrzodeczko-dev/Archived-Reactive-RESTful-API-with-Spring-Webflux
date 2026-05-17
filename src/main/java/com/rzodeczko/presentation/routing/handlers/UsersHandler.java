@@ -99,6 +99,28 @@ public class UsersHandler {
     }
 
     @Loggable
+    @Operation(summary = "DELETE user by username", security = @SecurityRequirement(name = "JwtAuthToken"), parameters = {@Parameter(in = ParameterIn.PATH, name = "username")})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Success", content = {
+                    @Content(schema = @Schema(implementation = UserDto.class), mediaType = "application/json")
+            }),
+            @ApiResponse(responseCode = "500", description = "Error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
+            })
+
+    })
+    public Mono<ServerResponse> deleteByUsername(ServerRequest serverRequest) {
+        return usersService.deleteByUsername(serverRequest.pathVariable("username"))
+                .flatMap(user -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromValue(user))
+                );
+    }
+
+
+
+    @Loggable
     @Operation(summary = "POST promote user to admin", security = @SecurityRequirement(name = "JwtAuthToken"), parameters = {@Parameter(ref = "username")})
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Success", content = {
