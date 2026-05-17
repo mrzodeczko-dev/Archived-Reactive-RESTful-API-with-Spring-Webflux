@@ -65,14 +65,14 @@ public class UsersService {
 
     public Mono<UserDto> deleteByUsername(String username) {
         return transactionPort.inTransaction(userPort
-                .deleteByUsername(username)
+                .deleteUserByUsername(username)
                 .switchIfEmpty(Mono.error(() -> new UserServiceException("No user with username: %s".formatted(username))))
                 .map(UserMapper::toDto));
     }
 
     public Flux<UserDto> deleteAll() {
         return transactionPort
-                .inTransactionMany(userPort.deleteAll())
+                .inTransactionMany(userPort.deleteAllExceptAdmins())
                 .map(UserMapper::toDto);
     }
 

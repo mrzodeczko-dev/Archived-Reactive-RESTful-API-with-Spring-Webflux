@@ -18,6 +18,7 @@ public class UsersRouting extends BaseJsonRouter {
     @RouterOperations({
             @RouterOperation(path = "/register", method = RequestMethod.POST, beanClass = UsersHandler.class, beanMethod = "register"),
             @RouterOperation(path = "/users", method = RequestMethod.GET, beanClass = UsersHandler.class, beanMethod = "getAllUsers"),
+            @RouterOperation(path = "/users", method = RequestMethod.DELETE, beanClass = UsersHandler.class, beanMethod = "deleteAllUsers"),
             @RouterOperation(path = "/users/username/{username}", method = RequestMethod.DELETE, beanClass = UsersHandler.class, beanMethod = "deleteByUsername"),
             @RouterOperation(path = "/users/username/{username}", method = RequestMethod.GET, beanClass = UsersHandler.class, beanMethod = "getByUsername"),
             @RouterOperation(path = "/users/promoteToAdmin/username/{username}", method = RequestMethod.POST, beanClass = UsersHandler.class, beanMethod = "promoteUserToAdminRole")
@@ -28,6 +29,7 @@ public class UsersRouting extends BaseJsonRouter {
                 .path("/users", builder -> builder
                         .nest(jsonAccept(), nested -> nested
                                 .GET("", _ -> usersHandler.getAllUsers())
+                                .DELETE("", _ -> usersHandler.deleteAllUsers())
                                 .GET("/username/{username}", usersHandler::getByUsername)
                                 .DELETE("/username/{username}", usersHandler::deleteByUsername)
                                 .POST("/promoteToAdmin/username/{username}", usersHandler::promoteUserToAdminRole)

@@ -31,7 +31,7 @@ public class UserRepositoryImpl implements UserPort {
     }
 
     @Override
-    public Mono<User> deleteByUsername(String username) {
+    public Mono<User> deleteUserByUsername(String username) {
         return mongo.deleteByUsername(username).map(UserDocumentMapper::toDomain);
     }
 

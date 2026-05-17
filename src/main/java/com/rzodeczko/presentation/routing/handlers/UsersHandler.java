@@ -112,12 +112,11 @@ public class UsersHandler {
     public Mono<ServerResponse> deleteByUsername(ServerRequest serverRequest) {
         return usersService.deleteByUsername(serverRequest.pathVariable("username"))
                 .flatMap(user -> ServerResponse
-                        .status(HttpStatus.OK)
+                        .status(HttpStatus.NO_CONTENT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(BodyInserters.fromValue(user))
                 );
     }
-
 
 
     @Loggable
@@ -138,5 +137,25 @@ public class UsersHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(BodyInserters.fromValue(user))
                 );
+    }
+
+    @Loggable
+    @Operation(summary = "DELETE all users", security = @SecurityRequirement(name = "JwtAuthToken"), parameters = {@Parameter(in = ParameterIn.PATH, name = "username")})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Success", content = {
+                    @Content(schema = @Schema(implementation = UserDto.class), mediaType = "application/json")
+            }),
+            @ApiResponse(responseCode = "500", description = "Error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
+            })
+
+    })
+    public Mono<ServerResponse> deleteAllUsers() {
+        return usersService.deleteAll()
+                .collectList()
+                .flatMap(usersList -> ServerResponse
+                        .status(HttpStatus.NO_CONTENT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromValue(usersList)));
     }
 }
