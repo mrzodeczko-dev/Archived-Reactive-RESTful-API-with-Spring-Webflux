@@ -3,11 +3,13 @@ package com.rzodeczko.application.service;
 import com.rzodeczko.application.dto.CreateCinemaDto;
 import com.rzodeczko.application.dto.CreateCinemaHallDto;
 import com.rzodeczko.application.exception.CinemaServiceException;
+import com.rzodeczko.application.port.out.CinemaCsvParserPort;
 import com.rzodeczko.application.port.out.CinemaHallPort;
 import com.rzodeczko.application.port.out.CinemaPort;
 import com.rzodeczko.application.port.out.CityPort;
 import com.rzodeczko.application.port.out.TransactionPort;
 import com.rzodeczko.application.validator.CreateCinemaDtoValidator;
+import com.rzodeczko.application.validator.CreateCinemaHallDtoValidator;
 import com.rzodeczko.domain.cinema.Cinema;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
 import com.rzodeczko.domain.city.City;
@@ -43,7 +45,11 @@ class CinemaServiceTest {
     @Mock
     private CityPort cityRepository;
     @Mock
+    private CinemaCsvParserPort cinemaCsvParserPort;
+    @Mock
     private CreateCinemaDtoValidator createCinemaDtoValidator;
+    @Mock
+    private CreateCinemaHallDtoValidator createCinemaHallDtoValidator;
     @Mock
     private TransactionPort transactionPort;
 
@@ -178,6 +184,7 @@ class CinemaServiceTest {
         @DisplayName("Happy path: cinema hall added, cinema updated")
         void shouldAddCinemaHallSuccessfully() {
             CreateCinemaHallDto dto = CreateCinemaHallDto.builder().rowNo(7).colNo(8).build();
+            when(createCinemaHallDtoValidator.validate(dto)).thenReturn(Map.of());
 
             Cinema emptyCinema = Cinema.builder()
                     .id("cinema-1")
@@ -211,6 +218,7 @@ class CinemaServiceTest {
         @DisplayName("Validation error: rowNo=0 emits CinemaServiceException in Mono")
         void shouldEmitValidationErrorOnInvalidDto() {
             CreateCinemaHallDto dto = CreateCinemaHallDto.builder().rowNo(0).colNo(4).build();
+            when(createCinemaHallDtoValidator.validate(dto)).thenReturn(Map.of("rowNo", "must be greater than 0"));
 
             StepVerifier.create(cinemaService.addCinemaHallToCinema("cinema-1", dto))
                     .expectErrorSatisfies(ex -> {
@@ -226,6 +234,7 @@ class CinemaServiceTest {
         @DisplayName("Cinema not found: CinemaServiceException with cinema id")
         void shouldThrowWhenCinemaNotFound() {
             CreateCinemaHallDto dto = CreateCinemaHallDto.builder().rowNo(6).colNo(6).build();
+            when(createCinemaHallDtoValidator.validate(dto)).thenReturn(Map.of());
 
             when(cinemaRepository.findById("missing")).thenReturn(Mono.empty());
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));

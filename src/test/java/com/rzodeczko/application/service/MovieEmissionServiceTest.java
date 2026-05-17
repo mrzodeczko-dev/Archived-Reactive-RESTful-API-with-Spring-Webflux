@@ -3,9 +3,11 @@ package com.rzodeczko.application.service;
 import com.rzodeczko.application.dto.CreateMovieEmissionDto;
 import com.rzodeczko.application.exception.MovieEmissionServiceException;
 import com.rzodeczko.application.port.out.CinemaHallPort;
+import com.rzodeczko.application.port.out.MovieEmissionCsvParserPort;
 import com.rzodeczko.application.port.out.MovieEmissionPort;
 import com.rzodeczko.application.port.out.MoviePort;
 import com.rzodeczko.application.port.out.TransactionPort;
+import com.rzodeczko.application.validator.CreateMovieEmissionDtoValidator;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
 import com.rzodeczko.domain.movie.Movie;
 import com.rzodeczko.domain.movie_emission.MovieEmission;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,7 +46,11 @@ class MovieEmissionServiceTest {
     @Mock
     private MoviePort movieRepository;
     @Mock
+    private MovieEmissionCsvParserPort movieEmissionCsvParserPort;
+    @Mock
     private TransactionPort transactionPort;
+    @Mock
+    private CreateMovieEmissionDtoValidator createMovieEmissionDtoValidator;
 
     @InjectMocks
     private MovieEmissionService movieEmissionService;
@@ -77,6 +84,7 @@ class MovieEmissionServiceTest {
     @DisplayName("createMovieEmission — emits validation error for invalid dto")
     void createMovieEmission_whenInvalid_shouldEmitError() {
         CreateMovieEmissionDto dto = CreateMovieEmissionDto.builder().build();
+        when(createMovieEmissionDtoValidator.validate(any())).thenReturn(Map.of("movieId", "must not be null"));
 
         StepVerifier.create(movieEmissionService.createMovieEmission(dto))
                 .expectError(MovieEmissionServiceException.class)
@@ -90,6 +98,7 @@ class MovieEmissionServiceTest {
                 .movieId("missing").cinemaHallId("hall-1")
                 .startTime("2030-06-01 18:00").baseTicketPrice("50.00").build();
 
+        when(createMovieEmissionDtoValidator.validate(any())).thenReturn(Map.of());
         when(movieRepository.findById("missing")).thenReturn(Mono.empty());
 
         StepVerifier.create(movieEmissionService.createMovieEmission(dto))
@@ -109,6 +118,7 @@ class MovieEmissionServiceTest {
                 .movieId("movie-1").cinemaHallId("hall-1")
                 .startTime("2027-06-01 18:00").baseTicketPrice("50.00").build();
 
+        when(createMovieEmissionDtoValidator.validate(any())).thenReturn(Map.of());
         when(movieRepository.findById("movie-1")).thenReturn(Mono.just(future));
 
         StepVerifier.create(movieEmissionService.createMovieEmission(dto))
@@ -125,6 +135,7 @@ class MovieEmissionServiceTest {
                 .movieId("movie-1").cinemaHallId("missing-hall")
                 .startTime("2030-06-01 18:00").baseTicketPrice("50.00").build();
 
+        when(createMovieEmissionDtoValidator.validate(any())).thenReturn(Map.of());
         when(movieRepository.findById("movie-1")).thenReturn(Mono.just(movie));
         when(cinemaHallRepository.findById("missing-hall")).thenReturn(Mono.empty());
 
@@ -142,6 +153,7 @@ class MovieEmissionServiceTest {
                 .movieId("movie-1").cinemaHallId("hall-1")
                 .startTime("2030-06-01 18:00").baseTicketPrice("50.00").build();
 
+        when(createMovieEmissionDtoValidator.validate(any())).thenReturn(Map.of());
         when(movieRepository.findById("movie-1")).thenReturn(Mono.just(movie));
         when(cinemaHallRepository.findById("hall-1")).thenReturn(Mono.just(hall));
 

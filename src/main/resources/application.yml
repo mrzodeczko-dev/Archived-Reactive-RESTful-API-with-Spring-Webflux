@@ -10,6 +10,9 @@ spring:
   data:
     mongodb:
       auto-index-creation: false   # Indexes are managed by Liquibase changesets
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   mail:
     host: smtp.gmail.com
@@ -24,10 +27,6 @@ spring:
             enable: true
   codec:
     max-in-memory-size: 5MB
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}

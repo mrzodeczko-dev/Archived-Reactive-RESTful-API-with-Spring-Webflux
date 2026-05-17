@@ -2,10 +2,12 @@ package com.rzodeczko.application.service;
 
 import com.rzodeczko.application.dto.AddCinemaHallToCinemaDto;
 import com.rzodeczko.application.exception.CinemaHallServiceException;
+import com.rzodeczko.application.port.out.CinemaHallCsvParserPort;
 import com.rzodeczko.application.port.out.CinemaHallPort;
 import com.rzodeczko.application.port.out.CinemaPort;
 import com.rzodeczko.application.port.out.TransactionPort;
 import com.rzodeczko.application.service.CinemaHallService;
+import com.rzodeczko.application.validator.AddCinemaHallToCinemaDtoValidator;
 import com.rzodeczko.domain.cinema.Cinema;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +23,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +37,11 @@ class CinemaHallServiceTest {
     @Mock
     private CinemaPort cinemaRepository;
     @Mock
+    private CinemaHallCsvParserPort cinemaHallCsvParserPort;
+    @Mock
     private TransactionPort transactionPort;
+    @Mock
+    private AddCinemaHallToCinemaDtoValidator addCinemaHallToCinemaDtoValidator;
 
     @InjectMocks
     private CinemaHallService cinemaHallService;
@@ -67,6 +74,7 @@ class CinemaHallServiceTest {
         void shouldAddHallSuccessfully() {
             AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(3, 4, "cinema-1");
 
+            when(addCinemaHallToCinemaDtoValidator.validate(any())).thenReturn(Map.of());
             when(cinemaRepository.findById("cinema-1")).thenReturn(Mono.just(cinema));
             when(cinemaHallRepository.addOrUpdate(any())).thenReturn(Mono.just(cinemaHall));
             when(cinemaRepository.addOrUpdate(any())).thenReturn(Mono.just(cinema));
@@ -85,6 +93,7 @@ class CinemaHallServiceTest {
         void shouldThrowWhenCinemaIdIsNull() {
             // Validator only checks cinemaId — supply null to actually trigger validation error
             AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(3, 4, null);
+            when(addCinemaHallToCinemaDtoValidator.validate(any())).thenReturn(Map.of("cinemaId", "must not be null"));
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
             StepVerifier.create(cinemaHallService.addCinemaHallToCinema(Mono.just(dto)))
@@ -98,6 +107,7 @@ class CinemaHallServiceTest {
         @DisplayName("Cinema not found: switchIfEmpty triggers CinemaHallServiceException")
         void shouldThrowWhenCinemaNotFound() {
             AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(3, 3, "no-cinema");
+            when(addCinemaHallToCinemaDtoValidator.validate(any())).thenReturn(Map.of());
             when(cinemaRepository.findById("no-cinema")).thenReturn(Mono.empty());
             when(transactionPort.inTransaction(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -114,6 +124,7 @@ class CinemaHallServiceTest {
         void shouldCreateCorrectNumberOfPositions() {
             AddCinemaHallToCinemaDto dto = new AddCinemaHallToCinemaDto(2, 3, "cinema-1");
 
+            when(addCinemaHallToCinemaDtoValidator.validate(any())).thenReturn(Map.of());
             when(cinemaRepository.findById("cinema-1")).thenReturn(Mono.just(cinema));
             when(cinemaHallRepository.addOrUpdate(any(CinemaHall.class)))
                     .thenAnswer(inv -> Mono.just(inv.getArgument(0)));
