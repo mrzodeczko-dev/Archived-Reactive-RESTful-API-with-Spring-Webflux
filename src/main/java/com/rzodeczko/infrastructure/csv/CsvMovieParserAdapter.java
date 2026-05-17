@@ -7,6 +7,7 @@ import com.rzodeczko.application.exception.MovieServiceException;
 import com.rzodeczko.application.port.out.MovieCsvParserPort;
 import com.rzodeczko.application.validator.CreateMovieDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -22,15 +23,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
+@RequiredArgsConstructor
 public class CsvMovieParserAdapter implements MovieCsvParserPort {
 
     private static final Logger log = LogManager.getLogger(CsvMovieParserAdapter.class);
 
     private final CreateMovieDtoValidator createMovieDtoValidator;
-
-    public CsvMovieParserAdapter(CreateMovieDtoValidator createMovieDtoValidator) {
-        this.createMovieDtoValidator = createMovieDtoValidator;
-    }
 
     @Override
     public Mono<ParseResult<CreateMovieDto>> parse(InputStream inputStream) {

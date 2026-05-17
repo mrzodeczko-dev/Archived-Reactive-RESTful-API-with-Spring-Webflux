@@ -7,6 +7,7 @@ import com.rzodeczko.application.exception.CinemaHallServiceException;
 import com.rzodeczko.application.port.out.CinemaHallCsvParserPort;
 import com.rzodeczko.application.validator.CreateCinemaHallDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -20,13 +21,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
+@RequiredArgsConstructor
 public class CsvCinemaHallParserAdapter implements CinemaHallCsvParserPort {
 
     private final CreateCinemaHallDtoValidator createCinemaHallDtoValidator;
-
-    public CsvCinemaHallParserAdapter(CreateCinemaHallDtoValidator createCinemaHallDtoValidator) {
-        this.createCinemaHallDtoValidator = createCinemaHallDtoValidator;
-    }
 
     @Override
     public Mono<ParseResult<CreateCinemaHallDto>> parse(InputStream inputStream) {

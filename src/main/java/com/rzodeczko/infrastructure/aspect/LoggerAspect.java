@@ -8,6 +8,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.CorePublisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -18,19 +19,15 @@ import java.util.Arrays;
 @Component
 public class LoggerAspect {
 
+    @SuppressWarnings("ReactiveStreamsUnusedPublisher")  // IntelliJ false positive
     @Around("@annotation(com.rzodeczko.infrastructure.aspect.annotations.Loggable)")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
-        Object result = joinPoint.proceed();
 
-        if (result instanceof Mono<?> mono) {
-            return logMono(joinPoint, mono);
-        }
-
-        if (result instanceof Flux<?> flux) {
-            return logFlux(joinPoint, flux);
-        }
-
-        return result;
+        return switch (joinPoint.proceed()) {
+            case Mono<?> mono -> logMono(joinPoint, mono);
+            case Flux<?> flux -> logFlux(joinPoint, flux);
+            default -> joinPoint.proceed();
+        };
     }
 
     private Mono<?> logMono(ProceedingJoinPoint joinPoint, Mono<?> mono) {

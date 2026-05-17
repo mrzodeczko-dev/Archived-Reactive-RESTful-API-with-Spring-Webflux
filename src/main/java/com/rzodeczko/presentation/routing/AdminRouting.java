@@ -112,7 +112,10 @@ public class AdminRouting extends BaseJsonRouter {
                     beanClass = UsersHandler.class, beanMethod = "deleteByUsername"),
             @RouterOperation(method = RequestMethod.POST,
                     path = "/admin/users/promoteToAdmin/username/{username}",
-                    beanClass = UsersHandler.class, beanMethod = "promoteUserToAdminRole")
+                    beanClass = UsersHandler.class, beanMethod = "promoteUserToAdminRole"),
+            @RouterOperation(method = RequestMethod.POST,
+                    path = "/admin/emails/send/multiple",
+                    beanClass = EmailHandler.class, beanMethod = "sendMultipleEmails")
     })
     public RouterFunction<ServerResponse> adminRouterFunction(
             CinemaHallsHandler cinemaHallsHandler,
@@ -121,7 +124,9 @@ public class AdminRouting extends BaseJsonRouter {
             MoviesHandler moviesHandler,
             MovieEmissionsHandler movieEmissionsHandler,
             StatisticsHandler statisticsHandler,
-            UsersHandler usersHandler) {
+            UsersHandler usersHandler,
+            EmailHandler emailHandler
+    ) {
 
         return route()
                 .path("/admin", admin -> admin
@@ -192,7 +197,12 @@ public class AdminRouting extends BaseJsonRouter {
                                         .POST("/promoteToAdmin/username/{username}", usersHandler::promoteUserToAdminRole)
                                 )
                         )
-                )
+                        //Email
+                        .path("/emails", builder -> builder
+                                .nest(jsonAccept(), nested -> nested
+                                        .POST("/send/multiple", emailHandler::sendMultipleEmails)
+                                )
+                        ))
                 .build();
     }
 }

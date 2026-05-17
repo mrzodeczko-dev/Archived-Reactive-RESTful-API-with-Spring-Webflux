@@ -27,6 +27,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 public class MovieEmissionsHandler {
@@ -152,6 +154,43 @@ public class MovieEmissionsHandler {
                         .status(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(BodyInserters.fromValue(movieEmissions))
+                );
+    }
+
+    @Loggable
+    @Operation(
+            summary = "GET movie emissions by cinema and movie with optional date filtering",
+            parameters = {
+                    @Parameter(name = "cinemaId", in = ParameterIn.PATH, description = "Cinema ID"),
+                    @Parameter(name = "movieId", in = ParameterIn.PATH, description = "Movie ID"),
+                    @Parameter(name = "fromDate", in = ParameterIn.QUERY, description = "Optional: from date (ISO 8601)", required = false),
+                    @Parameter(name = "toDate", in = ParameterIn.QUERY, description = "Optional: to date (ISO 8601)", required = false)
+            },
+            security = @SecurityRequirement(name = "JwtAuthToken"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success", content = {
+                    @Content(array = @ArraySchema(schema = @Schema(implementation = MovieEmissionDto.class)), mediaType = "application/json")
+            }),
+            @ApiResponse(responseCode = "500", description = "Error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseErrorDto.class))
+            })
+    })
+    public Mono<ServerResponse> getMovieEmissionsByCinemaAndMovie(ServerRequest serverRequest) {
+        String cinemaId = serverRequest.pathVariable("cinemaId");
+        String movieId = serverRequest.pathVariable("movieId");
+        LocalDateTime fromDate = serverRequest.queryParam("fromDate")
+                .map(LocalDateTime::parse)
+                .orElse(null);
+        LocalDateTime toDate = serverRequest.queryParam("toDate")
+                .map(LocalDateTime::parse)
+                .orElse(null);
+
+        return movieEmissionService.getMovieEmissionsByCinemaAndMovie(cinemaId, movieId, fromDate, toDate)
+                .collectList()
+                .flatMap(emissions -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromValue(emissions))
                 );
     }
 

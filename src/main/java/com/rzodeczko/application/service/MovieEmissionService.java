@@ -4,11 +4,7 @@ import com.rzodeczko.application.dto.CreateMovieEmissionDto;
 import com.rzodeczko.application.dto.MovieEmissionDto;
 import com.rzodeczko.application.exception.MovieEmissionServiceException;
 import com.rzodeczko.application.mapper.MovieEmissionMapper;
-import com.rzodeczko.application.port.out.CinemaHallPort;
-import com.rzodeczko.application.port.out.MovieEmissionCsvParserPort;
-import com.rzodeczko.application.port.out.MovieEmissionPort;
-import com.rzodeczko.application.port.out.MoviePort;
-import com.rzodeczko.application.port.out.TransactionPort;
+import com.rzodeczko.application.port.out.*;
 import com.rzodeczko.application.service.util.DateTimeGapFinder;
 import com.rzodeczko.application.validator.CreateMovieEmissionDtoValidator;
 import com.rzodeczko.application.validator.util.Validations;
@@ -29,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -161,6 +158,20 @@ public class MovieEmissionService {
         return movieEmissionPort.findMovieEmissionsByCinemaHallId(cinemaHallId)
                 .switchIfEmpty(Mono.error(() -> new MovieEmissionServiceException(
                         "No cinema hall with id: %s".formatted(cinemaHallId))))
+                .map(MovieEmissionMapper::toDto);
+    }
+
+    public Flux<MovieEmissionDto> getMovieEmissionsByCinemaAndMovie(String cinemaId, String movieId,
+                                                                    LocalDateTime fromDate, LocalDateTime toDate) {
+
+        return cinemaHallPort.getAllForCinemaById(cinemaId)
+                .map(CinemaHall::id)
+                .collectList()
+                .flatMapMany(chIds -> movieEmissionPort.findMovieEmissionsByCinemaHallIdInAndStartDateTimeBetweenAndMovieId(
+                        chIds,
+                        Optional.ofNullable(fromDate).orElse(LocalDateTime.now()),
+                        Optional.ofNullable(toDate).orElse(LocalDateTime.now().plusDays(7)),
+                        movieId))
                 .map(MovieEmissionMapper::toDto);
     }
 

@@ -18,7 +18,8 @@ public class MovieEmissionsRouting extends BaseJsonRouter {
     @RouterOperations({
             @RouterOperation(method = RequestMethod.GET, path = "/movieEmissions", beanClass = MovieEmissionsHandler.class, beanMethod = "getAllMovieEmissions"),
             @RouterOperation(method = RequestMethod.GET, path = "/movieEmissions/movieId/{movieId}", beanClass = MovieEmissionsHandler.class, beanMethod = "getAllMovieEmissionsByMovieId"),
-            @RouterOperation(method = RequestMethod.GET, path = "/movieEmissions/cinemaHallId/{cinemaHallId}", beanClass = MovieEmissionsHandler.class, beanMethod = "getAllMovieEmissionsByCinemaHallId")
+            @RouterOperation(method = RequestMethod.GET, path = "/movieEmissions/cinemaHallId/{cinemaHallId}", beanClass = MovieEmissionsHandler.class, beanMethod = "getAllMovieEmissionsByCinemaHallId"),
+            @RouterOperation(method = RequestMethod.GET, path = "/cinema/{cinemaId}/movie/{movieId}", beanClass = MovieEmissionsHandler.class, beanMethod = "getMovieEmissionsByCinemaAndMovie")
     })
     public RouterFunction<ServerResponse> movieEmissionsRouterFunction(MovieEmissionsHandler movieEmissionsHandler) {
         return route()
@@ -27,6 +28,7 @@ public class MovieEmissionsRouting extends BaseJsonRouter {
                                 .GET("", _ -> movieEmissionsHandler.getAllMovieEmissions())
                                 .GET("/movieId/{movieId}", movieEmissionsHandler::getAllMovieEmissionsByMovieId)
                                 .GET("/cinemaHallId/{cinemaHallId}", movieEmissionsHandler::getAllMovieEmissionsByCinemaHallId)
+                                .GET("/cinema/{cinemaId}/movie/{movieId}", movieEmissionsHandler::getMovieEmissionsByCinemaAndMovie)
                         )
                 )
                 .build();

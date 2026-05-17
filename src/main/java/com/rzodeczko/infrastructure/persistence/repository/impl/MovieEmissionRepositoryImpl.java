@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,5 +72,10 @@ public class MovieEmissionRepositoryImpl implements MovieEmissionPort {
     @Override
     public Flux<MovieEmission> findMovieEmissionsByCinemaHallId(String cinemaHallId) {
         return mongo.findMovieEmissionsByCinemaHallId(cinemaHallId).map(MovieEmissionDocumentMapper::toDomain);
+    }
+
+    @Override
+    public Flux<MovieEmission> findMovieEmissionsByCinemaHallIdInAndStartDateTimeBetweenAndMovieId(List<String> cinemaHallIds, LocalDateTime fromDate, LocalDateTime toDate, String movieId) {
+        return mongo.findMovieEmissionsByCinemaHallIdInAndStartDateTimeBetweenAndMovieId(cinemaHallIds, fromDate, toDate, movieId);
     }
 }
