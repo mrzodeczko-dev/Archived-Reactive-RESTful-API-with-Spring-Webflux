@@ -7,7 +7,10 @@ import com.rzodeczko.application.port.out.CityPort;
 import com.rzodeczko.application.port.out.MoviePort;
 import com.rzodeczko.application.port.out.TicketPurchasePort;
 import com.rzodeczko.domain.cinema_hall.CinemaHall;
+import com.rzodeczko.domain.city.City;
+import com.rzodeczko.domain.movie.Movie;
 import com.rzodeczko.domain.ticket.Ticket;
+import com.rzodeczko.domain.ticket_purchase.TicketPurchase;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,7 +32,7 @@ public class StatisticsService {
         this.moviePort = moviePort;
     }
 
-    private List<String> cinemaHallIdsForCity(com.rzodeczko.domain.city.City city) {
+    private List<String> cinemaHallIdsForCity(City city) {
         return city.cinemas()
                 .stream()
                 .flatMap(cinema -> cinema.cinemaHalls().stream().map(CinemaHall::id))
@@ -102,22 +105,58 @@ public class StatisticsService {
     }
 
     public Flux<MostPopularMovieGroupedByCityDto> findMostPopularMovieGroupedByCity() {
-        return cityPort.findAll()
-                .flatMap(city -> ticketPurchasePort
-                        .findAllByCinemaHallsIds(cinemaHallIdsForCity(city))
-                        .collectMultimap(
-                                tp -> tp.movieEmission().movie(),
-                                tp -> tp.tickets().size())
-                        .map(this::reduceMultiMapToMapWithMaxElementOf)
-                        .map(maxByMovie -> MostPopularMovieGroupedByCityDto.builder()
-                                .city(city.name())
-                                .movieFrequency(maxByMovie.entrySet().stream()
+        // Two parallel queries instead of N+1:
+        //   T1 -> all cities  (used to build cinemaHallId -> cityName index)
+        //   T2 -> all purchases (single scan, no per-city sub-queries)
+        Mono<List<City>> citiesMono = cityPort.findAll().collectList();
+        Mono<List<TicketPurchase>> purchasesMono = ticketPurchasePort.findAll().collectList();
+
+        return Mono.zip(citiesMono, purchasesMono)
+                .flatMapMany(tuple -> {
+                    List<City> cities = tuple.getT1();
+                    List<TicketPurchase> allPurchases = tuple.getT2();
+
+                    // Build cinemaHallId -> cityName index in O(halls)
+                    Map<String, String> hallToCity = new HashMap<>();
+                    for (City city : cities) {
+                        for (var cinema : city.cinemas()) {
+                            for (var hall : cinema.cinemaHalls()) {
+                                hallToCity.put(hall.id(), city.name());
+                            }
+                        }
+                    }
+
+                    // Single pass over all purchases: group by city, then by movie
+                    Map<String, Map<Movie, Integer>> byCityByMovie = new LinkedHashMap<>();
+                    for (TicketPurchase tp : allPurchases) {
+                        String cityName = hallToCity.get(tp.movieEmission().cinemaHallId());
+                        if (cityName == null) continue;
+                        byCityByMovie
+                                .computeIfAbsent(cityName, k -> new LinkedHashMap<>())
+                                .merge(tp.movieEmission().movie(), tp.tickets().size(), Integer::sum);
+                    }
+
+                    // Emit one DTO per city, preserving the order returned by cityPort
+                    return Flux.fromIterable(cities)
+                            .map(city -> {
+                                Map<Movie, Integer> movieFreqMap =
+                                        byCityByMovie.getOrDefault(city.name(), Map.of());
+                                int max = movieFreqMap.values().stream()
+                                        .max(Integer::compareTo)
+                                        .orElse(0);
+                                List<MovieFrequencyDto> topMovies = movieFreqMap.entrySet().stream()
+                                        .filter(e -> e.getValue() == max)
                                         .map(e -> MovieFrequencyDto.builder()
                                                 .movie(MovieMapper.toDto(e.getKey()))
                                                 .frequency(e.getValue())
                                                 .build())
-                                        .toList())
-                                .build()));
+                                        .toList();
+                                return MostPopularMovieGroupedByCityDto.builder()
+                                        .city(city.name())
+                                        .movieFrequency(topMovies)
+                                        .build();
+                            });
+                });
     }
 
     private <T> Map<T, Integer> reduceMultiMapToMapWithMaxElementOf(Map<T, Collection<Integer>> multiMap) {
